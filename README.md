@@ -1,6 +1,6 @@
+# Datasets (pre-alpha, design phase)
 
-
-
+I've been playing with this idea for an easy way to create, manage and transform datasets. It started as an `.yml` based configuration thing, but after iterating it with other developers it reached an interesting form:
 
 ```python
 
