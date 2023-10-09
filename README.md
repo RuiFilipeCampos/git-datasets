@@ -51,3 +51,24 @@ for batch in iterator.randomize():
     ...
 
 ```
+
+
+## How it will work
+
+Going in parts:
+
+```python
+@dataset(sql_file="./dataset.sql", data_dir="./dataset")
+class SegmentationDataset:
+    image: File
+    segmentation: File
+```
+
+If not there already, this code will create a file named `dataset.sql` and a folder named `dataset` with subdirectories `dataset/image` and `dataset/segmentation`. 
+
+
+
+
+
+
+
