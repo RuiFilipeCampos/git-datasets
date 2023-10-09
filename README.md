@@ -92,9 +92,28 @@ What this says is, let there be a new field, named `image_512x512`, that is the 
 
 The dependency of `image_512x512` on `image` is described by function definition: `def image_512x512(image: File) -> File`, which also defines the resulting type.
 
+In this case, we'd wish for the model to output labels(segmentation) with the same size of the image, so we define the same transformation to the `segmentation` field:
 
+```
+@dataset()
+class SegmentationDataset:
+    image: File
+    segmentation: File
 
-
+    def image_512x512(image: File) -> File:
+        image_array = plt.imread(image.path)
+        image_array = cv2.resize(image_array, size=(512, 512))
+        with File.make_tmp() as tmp_file:
+            plt.imsave(tmp_file.path)
+            return tmp_file
+   
+    def segmentation_512x512(segmentation: File) -> File:
+        segmentation_array = plt.imread(segmentation.path)
+        segmentation_array = cv2.resize(segmentation_array, size=(512, 512))
+        with File.make_tmp() as tmp_file:
+            plt.imsave(tmp_file.path)
+            return tmp_file
+```
 
 
 
