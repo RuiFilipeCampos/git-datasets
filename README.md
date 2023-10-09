@@ -94,8 +94,8 @@ The dependency of `image_512x512` on `image` is described by function definition
 
 In this case, we'd wish for the model to output labels(segmentation) with the same size of the image, so we define the same transformation to the `segmentation` field:
 
-```
-@dataset()
+```python
+@dataset(sql_file="./dataset.sql", data_dir="./dataset")
 class SegmentationDataset:
     image: File
     segmentation: File
@@ -114,6 +114,10 @@ class SegmentationDataset:
             plt.imsave(tmp_file.path)
             return tmp_file
 ```
+
+Note that, the sqlite database is being updated, the files are being saved in the correct locations, checksumed, etc.
+
+
 
 
 
