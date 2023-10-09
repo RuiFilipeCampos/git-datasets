@@ -64,7 +64,35 @@ class SegmentationDataset:
     segmentation: File
 ```
 
-If not there already, this code will create a file named `dataset.sql` and a folder named `dataset` with subdirectories `dataset/image` and `dataset/segmentation`. 
+If not there already, this code will create a file named `dataset.sql` and a folder named `dataset` with subdirectories `dataset/image` and `dataset/segmentation`.
+
+So, essentially, this class defines a schema, how your dataset looks like. Right now, each row has two features, an image and its segmentation, saved as filee.
+
+But, it is often the case that we need all the images to be of the same size.
+
+Instead of writing a for loop, altering the sqlite database, performing all sorts of cleanup, taking care of data integrity concerns, etc etc etc
+
+You kind of just, declare it:
+
+```python
+@dataset(sql_file="./dataset.sql", data_dir="./dataset")
+class SegmentationDataset:
+    image: File
+    segmentation: File
+
+    def image_512x512(image: File) -> File:
+        image_array = plt.imread(image.path)
+        image_array = cv2.resize(image_array, size=(512, 512))
+        with File.make_tmp() as tmp_file:
+            plt.imsave(tmp_file.path)
+            return tmp_file
+```
+
+What this says is, let there be a new field, named `image_512x512`, that is the result of applying these transformations to the `image`.
+
+The dependency of `image_512x512` on `image` is described by function definition: `def image_512x512(image: File) -> File`, which also defines the resulting type.
+
+
 
 
 
