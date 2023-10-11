@@ -4,7 +4,7 @@ I've been playing with this idea for an easy way to create, manage and transform
 
 ```python
 
-@dataset()
+@dataset(sql_file="./dataset.sql", data_dir="./dataset")
 class SegmentationDataset:
     image: File
     segmentation: File
