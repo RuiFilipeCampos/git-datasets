@@ -54,7 +54,7 @@ class SegmentationDataset:
 git commit index.py
 ```
 
-This will execute the `get_dataset_from_web` method and backup the files in a cache.
+This will execute the `get_dataset_from_web` method and backup the files in a cache, they are also symlinked to the `image/` and `segmentation/` folders (which are fields in the schema) 
 
 6. To perform transformations on the dataset:
 
