@@ -1,125 +1,146 @@
-# Datasets (pre-alpha, design phase)
+# Datasets (design and prototype phase)
 
-I've been playing with this idea for an easy way to create, manage and transform datasets. It started as an `.yml` based configuration thing, but after iterating it with other developers it reached an interesting form:
 
+# The idea
+
+1. Create an `index.py` file and write:
 ```python
 
-@dataset(sql_file="./dataset.sql", data_dir="./dataset")
+@dataset(remote="awsbucket")
 class SegmentationDataset:
-    image: File
-    segmentation: File
+    image: File[png | jpg]
+    segmentation: File[png]
+```
 
-    def image_512x512(image: File) -> File:
-        image_array = plt.imread(image.path)
-        image_array = cv2.resize(image_array, size=(512, 512))
-        with File.make_tmp() as tmp_file:
-            plt.imsave(tmp_file.path)
-            return tmp_file
-   
-    def segmentation_512x512(segmentation: File) -> File:
-        segmentation_array = plt.imread(segmentation.path)
-        segmentation_array = cv2.resize(segmentation_array, size=(512, 512))
-        with File.make_tmp() as tmp_file:
-            plt.imsave(tmp_file.path)
-            return tmp_file
+2. Track the dataset
 
-@batch(SegmentationDataset)
-class SegmentationBatch:
+```bash
+git datasets track index.py
+```
 
-    def image_512x512_batch(image_512x512: list[File]) -> tf.Tensor:
-        arrays = [plt.imread(path) for path in image_512x512]
-        arrays = np.array(arrays)
-        return tf.Tensor(arrays)
+3. Commit the file
 
-    def segmentation_512x512_batch(segmentation_512x512: list[File]) -> tf.Tensor:
-        arrays = [plt.imread(path) for path in segmentation_512x512]
-        arrays = np.array(arrays)
-        return tf.Tensor(arrays)
+```
+git commit index.py
+```
 
-    def image_512x512_batch_augmented(image_512x512_batch: tf.Tensor) -> tf.Tensor:
-        shape_of_batch = image_512x512_batch.shape()
-        noise = make_noise(shape_of_batch)
-        return image_512x512_batch + noise
+This results in the creation of an sqlite database with the given schema and since it has two file fields, two new folders:
+
+```
+| image/
+| segmentation/
+| dataset.sqlite
+| index.py
+```
+
+4. Write an ingest method to get data into the dataset
+
+```python
+@dataset(remote="awsbucket")
+class SegmentationDataset:
+    image: File[png | jpg]
+    segmentation: File[png]
     
-    def augmented_toguether(image_512x512_batch, image_512x512_batch_augmented) -> tuple[tf.Tensor, tf.Tensor]:
-        transformation = tf.RandomAffine()
-        mapping = map(transformation, [image_512x512_batch, image_512x512_batch_augmented])
-        return tuple(mapping)
-
-iterator = SegmentationBatch.image_512x512_batch_augmented.range(0, 100, 10)
-for batch in iterator.randomize():
-    ...
+    @ingest
+    def get_dataset_from_web():
+        ... # perform some web requests, save the files
+        return list_of_image, list_of_segmentation
 
 ```
 
+5. Commit the changes
 
-## How it will work
+```
+git commit index.py
+```
 
-Going in parts:
+This will execute the `get_dataset_from_web` method and backup the files in a cache.
+
+6. To perform transformations on the dataset:
+
 
 ```python
-@dataset(sql_file="./dataset.sql", data_dir="./dataset")
+@dataset(remote="awsbucket")
 class SegmentationDataset:
-    image: File
-    segmentation: File
+    image: File[png | jpg]
+    segmentation: File[png]
+    
+    def segmentation_resized(segmentation: File[png]) -> File[png]:
+        ...
+        return file
+
 ```
 
-If not there already, this code will create a file named `dataset.sql` and a folder named `dataset` with subdirectories `dataset/image` and `dataset/segmentation`.
+and then
 
-So, essentially, this class defines a schema, how your dataset looks like. Right now, each row has two features, an image and its segmentation, saved as filee.
+```
+git commit index.py
+```
 
-But, it is often the case that we need all the images to be of the same size.
+will alter the schema and perform the transformation, resulting in 
 
-Instead of writing a for loop, altering the sqlite database, performing all sorts of cleanup, taking care of data integrity concerns, etc etc etc
+```
+| image/
+| segmentation/
+| segmentation_resized/
+| dataset.sqlite
+| index.py
+```
 
-You kind of just, declare it:
+7. You can also remove fields
+
+
 
 ```python
-@dataset(sql_file="./dataset.sql", data_dir="./dataset")
+@dataset(remote="awsbucket")
 class SegmentationDataset:
-    image: File
-    segmentation: File
+    segmentation: File[png]
+    
+    def segmentation_resized(segmentation: File[png]) -> File[png]:
+        ...
+        return file
 
-    def image_512x512(image: File) -> File:
-        image_array = plt.imread(image.path)
-        image_array = cv2.resize(image_array, size=(512, 512))
-        with File.make_tmp() as tmp_file:
-            plt.imsave(tmp_file.path)
-            return tmp_file
 ```
 
-What this says is, let there be a new field, named `image_512x512`, that is the result of applying these transformations to the `image`.
+and,
 
-The dependency of `image_512x512` on `image` is described by function definition: `def image_512x512(image: File) -> File`, which also defines the resulting type.
-
-In this case, we'd wish for the model to output labels(segmentation) with the same size of the image, so we define the same transformation to the `segmentation` field:
-
-```python
-@dataset(sql_file="./dataset.sql", data_dir="./dataset")
-class SegmentationDataset:
-    image: File
-    segmentation: File
-
-    def image_512x512(image: File) -> File:
-        image_array = plt.imread(image.path)
-        image_array = cv2.resize(image_array, size=(512, 512))
-        with File.make_tmp() as tmp_file:
-            plt.imsave(tmp_file.path)
-            return tmp_file
-   
-    def segmentation_512x512(segmentation: File) -> File:
-        segmentation_array = plt.imread(segmentation.path)
-        segmentation_array = cv2.resize(segmentation_array, size=(512, 512))
-        with File.make_tmp() as tmp_file:
-            plt.imsave(tmp_file.path)
-            return tmp_file
+```
+git commit index.py
 ```
 
-Note that, the sqlite database is being updated, the files are being saved in the correct locations, checksumed, etc.
+results in 
+
+```
+| segmentation/
+| segmentation_resized/
+| dataset.sqlite
+| index.py
+```
 
 
+8. But of course, you can go back
 
+```
+git reset --hard HEAD~1
+```
 
+resulting in 
+
+```
+| image/
+| segmentation/
+| segmentation_resized/
+| dataset.sqlite
+| index.py
+```
+
+9. Save the changes as you normally do, by pushing the commits
+
+```
+git push
+```
+
+The message here is: the only thing you truly need to care about is the `index.py` file, comited `index.py` file is guaranteed to describe the current state of `database.sqlite` and the data folders. 
 
 
 
