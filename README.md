@@ -140,7 +140,11 @@ resulting in
 git push
 ```
 
-The message here is: the only thing you truly need to care about is the `index.py` file, comited `index.py` file is guaranteed to describe the current state of `database.sqlite` and the data folders. 
+The message here is: the only thing you truly need to care about is the `index.py` file, comited `index.py` file is guaranteed to describe the current state of `database.sqlite` and the data folders.
 
+Notes:
 
-
+- the sqlite file is version controled via checkpoints and sql deltas, both pushed to remote
+- the files are version controled by the sqlite file
+- data can be added to the sqlite database independently of the `index.py` file
+- however, schema mismatches will cause an error til resolved
