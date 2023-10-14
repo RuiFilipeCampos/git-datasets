@@ -1,6 +1,7 @@
 """TODO: Docstring"""
 
 def pre_commit(*args, **kwargs):
+    """ Pre commit dataset. """
     raise NotImplementedError
 
 
