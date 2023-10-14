@@ -1,5 +1,4 @@
-
-
+""" TODO: docstring """
 
 
 class InvalidInputType(TypeError):

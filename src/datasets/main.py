@@ -1,5 +1,5 @@
 """
-Prototype for the datasets project.
+Entrypoint for the git-datasets package.
 """
 
 import sqlite3
