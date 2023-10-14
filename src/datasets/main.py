@@ -2,8 +2,6 @@
 Entrypoint for the git-datasets package.
 """
 
-import sqlite3
-from contextlib import closing
 import logging
 import argparse
 import os.path
