@@ -5,6 +5,8 @@ Entrypoint for the git-datasets package.
 import sqlite3
 from contextlib import closing
 import logging
+import argparse
+import os.path
 
 from .types import DecoratedClass, Decorator
 from .pre_commit import pre_commit
@@ -17,29 +19,37 @@ logging.basicConfig(level=logging.DEBUG)
 
 logger = logging.getLogger("datasets")
 
+
 def dataset(*, remote: str) -> Decorator:
     """
-    A decorator to manage the lifecycle of the SQLite connection 
-    and initialize a dataset with the provided schema.
+    This decorator parses command line arguments and feeds
+    the results to the chosen action.
     """
 
-    sql_file = "./dataset.sql"
-    data_dir = "./dataset"
-
     def decorator(cls: DecoratedClass) -> DecoratedClass:
-        with closing(sqlite3.connect(sql_file)) as conn:
-            cursor = conn.cursor()
+        if __name__ == "__main__":
 
-            if __name__ == "__main__":
-                arg = "commit"
+            # parse arguments
+            parser = argparse.ArgumentParser()
+            parser.add_argument("path", help="Path to the root folder.")
+            actions = [ "--pre-commit", "--pull", "--push", "--post-checkout" ]
+            group = parser.add_mutually_exclusive_group(required=True)
+            for action in actions:
+                group.add_argument(action, action="store_true")
+            parser.parse_args()
 
-                if arg == "commit":
-                    pre_commit(cls, cursor, data_dir, remote)
-                elif arg == "pull":
-                    pull(cls, cursor, data_dir, remote)
-                elif arg == "push":
-                    push(cls, cursor, data_dir, remote)
-                elif arg == "checkout":
-                    checkout(cls, cursor, data_dir, remote)
-            return cls
+            data_dir = os.path.join(parser.path, "data")
+            sql_file = os.path.join(parser.path, "dataset.sqlite")
+
+            # choose action 
+            if parser.pre_commit:
+                pre_commit(cls, data_dir, sql_file, remote)
+            elif parser.pull:
+                pull(cls, data_dir, sql_file, remote)
+            elif parser.push:
+                push(cls, data_dir, sql_file, remote)
+            elif parser.post_checkout:
+                checkout(cls, data_dir, sql_file, remote)
+
+        return cls
     return decorator
