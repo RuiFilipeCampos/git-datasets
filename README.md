@@ -1,4 +1,7 @@
-# Datasets (design and prototype phase)
+
+![image](https://github.com/RuiFilipeCampos/git-datasets/assets/63464503/e0885e59-865e-48f2-bdb5-3113102522fc)
+
+# git-datasets
 
 
 # The idea
