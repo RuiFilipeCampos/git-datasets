@@ -7,10 +7,10 @@ import argparse
 import os.path
 
 from .types import DecoratedClass, Decorator
-from .pre_commit import pre_commit
-from .pull import pull
-from .push import push
-from .checkout import checkout
+from .git_hooks.pre_commit import pre_commit
+from .git_hooks.pull import pull
+from .git_hooks.push import push
+from .git_hooks.checkout import checkout
 
 
 logging.basicConfig(level=logging.DEBUG)
