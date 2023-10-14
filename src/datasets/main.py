@@ -14,18 +14,24 @@ from .checkout import checkout
 
 
 logging.basicConfig(level=logging.DEBUG)
-
 logger = logging.getLogger("datasets")
 
 
 def dataset(*, remote: str) -> Decorator:
     """
-    This decorator parses command line arguments and feeds
-    the results to the chosen action.
+    This decorator serves a twofold purpose:
+
+    1. (write) When executed directly, it acts as a command-line 
+    utility tailored for git hooks, parsing arguments
+    and triggering the appropriate actions.
+
+    2. (read-only) When used within a package, it decorates classes,
+    augmenting or modifying their behavior without 
+    directly altering the dataset.
     """
 
     def decorator(cls: DecoratedClass) -> DecoratedClass:
-        if __name__ == "__main__":
+        if __name__ == "__main__": # write mode
 
             # parse arguments
             parser = argparse.ArgumentParser()
@@ -34,19 +40,19 @@ def dataset(*, remote: str) -> Decorator:
             group = parser.add_mutually_exclusive_group(required=True)
             for action in actions:
                 group.add_argument(action, action="store_true")
-            parser.parse_args()
+            args = parser.parse_args()
 
-            data_dir = os.path.join(parser.path, "data")
-            sql_file = os.path.join(parser.path, "dataset.sqlite")
+            data_dir = os.path.join(args.path, "data")
+            sql_file = os.path.join(args.path, "dataset.sqlite")
 
             # choose action 
-            if parser.pre_commit:
+            if args.pre_commit:
                 pre_commit(cls, data_dir, sql_file, remote)
-            elif parser.pull:
+            elif args.pull:
                 pull(cls, data_dir, sql_file, remote)
-            elif parser.push:
+            elif args.push:
                 push(cls, data_dir, sql_file, remote)
-            elif parser.post_checkout:
+            elif args.post_checkout:
                 checkout(cls, data_dir, sql_file, remote)
 
         return cls
