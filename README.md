@@ -215,7 +215,9 @@ I'm still brainstorming on this one.
 The most likely solution will be to change files (except `index.py`) only on `git pull index.py`. Checking out a different branch would change the `index.py` file to the correct version, but you'd have to explicitly pull to get the data in the correct form. 
 
 
+## What happens when there is a merge conflict ?
 
+Merge conflicts are resolved directly in the `index.py` file. The state of the dataset can always be derived from its previous commit and its current commit. So after resolving a conflict, that's what determines what happens to the data.
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
