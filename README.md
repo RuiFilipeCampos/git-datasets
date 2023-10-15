@@ -87,6 +87,31 @@ class SegmentationDataset:
 
 Commiting this results in the creation of a new field, `image_resized` with type `File[png]`, and in the application of the transformation to populate that field.
 
+Additionally, multi-stage transformations are possible:
+
+
+```python
+
+@dataset(remote="urltoyourawsbucket")
+class SegmentationDataset:
+    image: File[png | jpg]
+    image_segmentation: File[png]
+
+    def image_resized(image: File[png | jpg]) -> File[png]:
+        ... # perform resize
+        return file # instance of `File[png]``
+
+    def image_resized_plus_brightness(image_resized: File[png]) -> File[png]:
+        ... # add brightness
+        return file # instance of `File[png]``
+
+    def image_plus_resized(image: File[png | jpg], image_resized: File[png]) -> -> File[png]:
+        ... # do stuff with both files
+        return file # instance of `File[png]``
+
+```
+
+
 # And vertical transformations ?
 
 For editing individual rows you can use `Action`:
