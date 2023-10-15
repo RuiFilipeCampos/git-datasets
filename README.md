@@ -89,22 +89,34 @@ Commiting this results in the creation of a new field, `image_resized` with type
 
 # And vertical transformations ?
 
-```python
+For editing individual rows you can use `Action`:
 
+```python
 @dataset(remote="urltoyourawsbucket")
 class SegmentationDataset:
     image: File[png | jpg]
     image_segmentation: File[png]
 
-    # range iterates every row, the return type instructs    
-    @range()
     def transformation_1(image: File[png | jpg]) -> Action:
         ... # perform some checks
         action = None if image_checks_out else Action.Delete
         return action
+```
+
+Note that by declaring `Action` as a return type, you inform git-datasets that a new field is not to be created (like in the previous example), instead, current values will be altered.
+
+Transformations always occur once, on the first time they are commited.
+
+For more control over which rows you are iterating:
+
+```python
+@dataset(remote="urltoyourawsbucket")
+class SegmentationDataset:
+    image: File[png | jpg]
+    image_segmentation: File[png]
 
     @range(1, 10, 3)
-    def transformation_2(image: File[png | jpg]) -> Action:
+    def transformation_2(image: File[png | jpg]) -> Action | None:
         ... # perform some checks
         action = None if image_checks_out else Action.Delete
         return action
@@ -115,9 +127,22 @@ class SegmentationDataset:
         return Action.Delete
 
     @index(11)
-    def transformation_4() -> Row["image", "image_segmentation"]:
+    def transformation_4() -> Action.Alter["image", "image_segmentation"]:
         ... # get data
         return new_image, new_segmentation
+```
+
+You can also declare `None` as the return type for no action. This is useful if you want to implement some check:
+
+```python
+@dataset(remote="urltoyourawsbucket")
+class SegmentationDataset:
+    image: File[png | jpg]
+    image_segmentation: File[png]
+
+    def ensure_rgb(image: File[png | jpg]) -> None:
+        ... # load image
+        assert image.size[2] == 3 
 
 ```
 
