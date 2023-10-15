@@ -1,33 +1,34 @@
-"""TODO: Docstring"""
-
-def pre_commit(*args, **kwargs):
-    """ Pre commit dataset. """
-    raise NotImplementedError
-
-
-
 """
+This module provides functionality to shape the datasets prior to committing their index.py file.
 
-# note: _get* are pure functions, no side effects
-# while _modify* is the opposite
+This code is executed when:
 
-desired_schema = _get_desired_schema(cls)
-current_schema = _get_current_schema(cursor, cls.__name__)
-diff_schema = _get_schema_diff(current_schema, desired_schema)
-del current_schema, desired_schema
+```
+python index.py --pre-commit
+```
 
-_modify_sql_database(cursor, diff_schema)
-_modify_data_directory(data_dir, diff_schema)
-_modify_history(data_dir)
+is executed. Which itself is called as a git hook by `git commit index.py`. 
 
-_modify_class(cls)
+It focuses on:
+1. Adjusting the database schema to match a desired state. 
+   This includes querying the current schema, computing differences, 
+   and then applying those differences both to the SQL database 
+   and to the corresponding data directory structure.
+2. Handling row changes. 
+
+
+Note:
+- The functions prefixed with `_get` are pure and have no side effects, 
+  while those prefixed with `_modify` perform changes to their respective targets.
+"""
 
 
 # logic used by @dataset, all function definitions appear in the same order
+
 def _get_desired_schema(cls: DecoratedClass) -> DatasetSchema:
-    \"""
+    """
     Extracts the desired schema from the provided class based on its annotations.
-    \"""
+    """
 
     field_to_type_mapping = cls.__annotations__.items()
 
@@ -38,9 +39,9 @@ def _get_desired_schema(cls: DecoratedClass) -> DatasetSchema:
     }
 
 def _get_current_schema(cursor: Cursor, table_name: str) -> DatasetSchema:
-    ""
+    """
     Queries and retrieves the current schema of the specified table.
-    ""
+    """
 
     schema_query = SQLCommandGenerator.schema_query_cmd(table_name)
     cursor.execute(schema_query)
@@ -51,44 +52,51 @@ def _get_current_schema(cursor: Cursor, table_name: str) -> DatasetSchema:
 def _get_schema_diff(
     current_schema: DatasetSchema, desired_schema: DatasetSchema
 ) -> DiffSchema:
-    ""
+    """
     Compute the difference between the desired schema and the current schema.
-    ""
+    """
 
     print(current_schema)
     print(desired_schema)
     return {}
 
 
-def _modify_sql_database(cursor: Cursor, diff_schema: dict) -> None:
-    ""
+def _modify_sql_database_schema(cursor: Cursor, diff_schema: DiffSchema) -> None:
+    """
     Apply schema changes based on the computed difference.
-    ""
+    """
     print(cursor)
     print(diff_schema)
 
 
-def _modify_data_directory(data_dir: PathStr, diff_schema: dict) -> None:
-    ""
+def _modify_data_directory_structure(data_dir: PathStr, diff_schema: DiffSchema) -> None:
+    """
     Apply directory changes based on the computed difference.
-    ""
+    """
     print(data_dir)
     print(diff_schema)
 
-def _modify_class(cls: DecoratedClass) -> DecoratedClass:
-    ""
-    Modify the class to provide additional functionality or 
-    bind it to the dataset.
-    ""
 
-    print(cls)
-    return cls
+def pre_commit(cls, *args, **kwargs) -> None:
+    """ Pre commit dataset. """
 
-def _modify_history(data_dir: PathStr):
+    # note: _get* are pure functions, no side effects
+    # while _modify* is the opposite
+
+    # handle horizontal (schema) changes
+    desired_schema = _get_desired_schema(cls)
+    current_schema = _get_current_schema(cursor, cls.__name__)
+    diff_schema = _get_schema_diff(current_schema, desired_schema)
+    del current_schema, desired_schema
+
+    if len(diff_schema) != 0:
+        _modify_sql_database_schema(cursor, diff_schema)
+        _modify_data_directory_structure(data_dir, diff_schema)
+
+    # handle vertical (row) changes
+
     ...
-    # commit this file
-    # commit the data
+    
 
 
 
-"""
