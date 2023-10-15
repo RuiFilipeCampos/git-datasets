@@ -55,7 +55,7 @@ class SegmentationDataset:
     image: File[png | jpg]
     image_segmentation: File[png]
 
-    def get_data_from_web() -> list[Row]:
+    def get_data_from_web() -> list[Row["image", "image_segmentation"]]:
         ... # perform some requests, massage data, return it to save it
         return [
             (file_1, file_2),
@@ -134,18 +134,26 @@ class SegmentationDataset:
 
 You can also declare `None` as the return type for no action. This is useful if you want to implement some check:
 
+## How important are the type hints ?
+
+Critical. When you commit a transformation you get to keep it in the code without it being run again on each new commit. This is good, it serves as documentation. But if you alter the schema in such a way that the transformation now does not make sense, the index.py file would now be lying to you. You would end up with something like:
+
 ```python
 @dataset(remote="urltoyourawsbucket")
 class SegmentationDataset:
-    image: File[png | jpg]
+
     image_segmentation: File[png]
 
-    def ensure_rgb(image: File[png | jpg]) -> None:
-        ... # load image
-        assert image.size[2] == 3 
+    @index(11)
+    def transformation_4() -> Action.Alter["image"]:
+        ... # get data
+        return new_image
 
 ```
 
+note how the type hints of `transformation_4` clearly state that the transformation is applied to a field that does not exist anymore.
+
+By having the type hints, I know that I need to throw an error and prevent the commit from happening.
 
 ## What about scale and integrity? 
 
