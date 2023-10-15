@@ -278,7 +278,14 @@ class MedicalDiagnosisDataset:
 ```
 
 
+## Previous Work
+
+- https://github.com/iterative/dvc
+- https://github.com/dolthub/dolt
+
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 
 
 
