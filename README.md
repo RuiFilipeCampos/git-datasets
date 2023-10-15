@@ -230,6 +230,54 @@ python index.py --sql-shell
 which will open the sqlite shell in read only mode. 
 
 
+## Examples
+
+### Medical dataset
+
+```python
+@dataset(remote="urltoyourawsmedicaldata")
+class MedicalDiagnosisDataset:
+    patient_id: str
+    age: int
+    weight: float
+    height: float
+    mri_scan: File[dicom]
+    radiologist_note: File[txt]
+    diagnosis: str
+
+    # Initial method to populate the dataset from the hospital database
+    def fetch_initial_data() -> list[Row["patient_id", "age", "weight", "height", "mri_scan", "radiologist_note", "diagnosis"]]:
+        ... # fetch from a medical DB, ensuring data privacy and de-identification
+        return [
+            ("patient_001", 45, 70.5, 175.0, mri_1, note_1, "Benign"),
+            ("patient_002", 56, 80.2, 180.0, mri_2, note_2, "Malignant"),
+            ...
+        ]
+
+    # Field representing normalized MRI scans
+    def normalized_mri(mri_scan: File[dicom]) -> File[dicom]:
+        ... # apply some normalization techniques on the MRI scan
+        return processed_mri
+
+    # Field representing the summarized points from radiologist's notes
+    def radiologist_key_findings(radiologist_note: File[txt]) -> str:
+        ... # use NLP techniques to extract essential points
+        return findings_summary
+
+    # Vertical transformation to exclude patients below a certain age
+    @range(0, 100, 1)
+    def filter_by_age(age: int) -> Action | None:
+        if age < 18:
+            return Action.Delete
+        return None
+
+    # Verification that MRI scans meet certain quality criteria
+    def ensure_mri_quality(mri_scan: File[dicom]) -> None:
+        ... # load the dicom file and check its properties
+        assert quality_check(mri_scan)
+```
+
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
