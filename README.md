@@ -192,14 +192,27 @@ note how the type hints of `transformation_4` clearly state that the transformat
 
 By having the type hints, I know that I need to throw an error and prevent the commit from happening.
 
+## Is git handling the files ?
+
+No, large files are uploaded to aws. Git will version the `index.py` file and possibly an internal list of files that have been uploaded to aws.
+
+Aws is not strict requirement too, will be extended at later stages.
+
 ## What about scale and integrity? 
 
 At an initial phase, I'm planing data deduplication schemes and data integrity guarantees via checksums. Any structure is imposed via the sqlite database, files themselves are always cached in an hidden folder and symlinked to the places they need to be so that checking out different commits is efficient. Same goes for the aws bucket, structure is imposed by the repository, the bucket will just have a lot of files pointing to it. 
 
 ## SQLite for ML datasets ?
 
-For now, yes. I'm going for prototype and for something that works on small to medium sized datasets.
+For now, yes. I'm going for prototype and for something that works on small to medium sized datasets. This requirement will be relaxed at later stages.
 
+## Isn't it a lot of overhead added to git commands ?
+
+I'm still brainstorming on this one.
+
+`git commit` and `git push` is fine because they only act when the `index.py` file changes, which is the whole point. But when checking out branches or commits, it might become cumberson to have it move files around all the time.
+
+The most likely solution will be to change files (except `index.py`) only on `git pull index.py`. Checking out a different branch would change the `index.py` file to the correct version, but you'd have to explicitly pull to get the data in the correct form. 
 
 
 
