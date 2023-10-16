@@ -219,6 +219,14 @@ The most likely solution will be to change files (except `index.py`) only on `gi
 
 Merge conflicts are resolved directly in the `index.py` file. The state of the dataset can always be derived from its previous commit and its current commit. So after resolving a conflict, that's what determines what happens to the data.
 
+## What happens if someone commits without `git-datasets` ?
+
+This will happen. A merge conflict might get resolved on github's interface. Someone might commit without having git datasets installed. Etc.
+
+If the commits make sense, that is, the dataset can be constructed as usual by following the transformations on each commit, that's what will happen.
+
+If some commit does not make sense and generates integrity issues. The commits will be marked as corrupt and the dataset is reconstructed from the last non-corrupt commit.
+
 ## How do you inspect data ?
 
 Files are stored in folders with the same name as the fields in the schema. The name of each file has the form `[id].[checksum].[mimetype]`, for example: `21.2ef7bde608ce5404e97d5f042f95f89f1c232871.png`. So they can inspected quite easily. As for the database:
