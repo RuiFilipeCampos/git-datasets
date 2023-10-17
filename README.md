@@ -365,11 +365,8 @@ class MedicalDiagnosisDataset:
         return findings_summary
 
     # Vertical transformation to exclude patients below a certain age
-    @range(0, 100, 1)
-    def filter_by_age(age: int) -> Action | None:
-        if age < 18:
-            return Action.Delete
-        return None
+    def filter_by_age(age: int) -> Action.Delete:
+        return age < 18
 
     # Verification that MRI scans meet certain quality criteria
     def ensure_mri_quality(mri_scan: File[dicom]) -> None:
