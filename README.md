@@ -8,7 +8,7 @@
 
 
 <!-- PROJECT LOGO -->
-<br />
+<br/>
 <div align="center">
   <a href="https://github.com/RuiFilipeCampos/git-datasets">
     <img src="https://github.com/RuiFilipeCampos/git-datasets/assets/63464503/e0885e59-865e-48f2-bdb5-3113102522fc" alt="Logo" width="260" height="260">
@@ -30,50 +30,42 @@
 
 ## How are you planning to do that ?
 
-Every dataset has an `index.py` file. The promise? A committed `index.py` always tells the truth. Every transformation occurs on `git commit` of this file. Let's say you want a dataset with images and object segmentations. Your `index.py` could look like this:
+Every dataset has an `index.py` file. The promise? A committed `index.py` always tells the truth. The consequence is that every transformation occurs on `git commit index.py`. 
+
+Let's say you want a dataset with images and object segmentations. Your `index.py` could look like this:
 
 ```python
 @dataset
-class SegmentationDataset:
-    image: File[png | jpg]
-    segmentation: File[png]
+class ImageClassificationDataset:
+    image: File[jpg]
+    label: Literal["cat", "dog", "person"]
 ```
 
-First, you set this up as a dataset using `git datasets new index.py`, then you save it with `git commit`. When you do this, an sqlite file is made to keep track of everything and folders named `image/` and `segmentation/` are created. 
-
-Whenever you modify and commit the file, the corresponding updates take place.
-
-A git history of your dataset is kept in parallel to the actual git history of your repository. 
-
-## Where are files going ?
-
-Files go into the `.git` folder and are symlinked to where they need to be.
-
-They are uploaded to your chosen cloud provider - at this stage, I will only support aws s3.
-
-You link the repository to a bucket once. That link is stored in `.git`, but of course,  credentials are requested on a per-user basis and never stored in the repository.
-
+First, you set this up as a dataset using `git datasets new index.py`. When you save it with `git commit index.py` a parquet file is created with that schema. This file is hidden out of view in the `.git` folder and when you run `git push` it is uploaded to a chosen cloud provider ([apache-libcloud](https://libcloud.apache.org) will be used to support all providers)
 
 ## How would you add data ?
 
-Declare a method with return type `Action.Insert`:
+Declare a method with return type of `Action.Insert`:
 
 ```python
 @dataset
 class SegmentationDataset:
-    image: File[png | jpg]
-    segmentation: File[png]
+    image: File[jpg]
+    label: Literal["cat", "dog", "person"]
 
-    def get_data_from_web(image: File[png | jpg], segmentation: File[png]) -> Action.Insert:
-        # since the declared actions is `Insert`. the values
-        # of the arguments `image` and `segmentation` are set
-        # to `None`
+    def get_data_from_web() -> Action.Insert[{
+        "image": File[jpg],
+        "label": Literal["cat", "dog", "person"],
+    }]
 
         ... # perform some requests, massage data into the correct form
 
-        # the order of the returned values must match
-        # the order of the function arguments
-        return list_of_image, list_of_segmentation
+        return [
+            (image_1, label_1),
+            (image_2, label_2),
+            (image_3, label_3),
+            ...
+        ]
 ```
 
 this method is called once on the first time it is commited.
@@ -83,24 +75,34 @@ this method is called once on the first time it is commited.
 
 All data transformations will happen on commit, leaving a traceable history of everything that happened to the dataset. 
 
-For example, I might want to resize the orignal image and have it as a new feature for the dataset:
+For example, I might want to resize the orignal images and encode the label:
 
 ```python
-
 @dataset
 class SegmentationDataset:
-    image: File[png | jpg]
-    segmentation: File[png]
+    image: File[jpg]
+    label: Literal["cat", "dog", "person"]
 
-    def image_resized(image: File[png | jpg]) -> File[png]:
+    def image_resized_512x512(image: File[jpg]) -> File[png]:
 
         ... # perform resize
 
-        return file # instance of `File[png]``
+        # return an instance of `File[png]`
+        return file
+
+    def encoded_label(label: Literal["cat", "dog", "person"]) -> Literal[0, 1, 2]:
+        if label == "cat":
+            return 0
+        elif label == "dog":
+            return 1
+        elif label == "person":
+            return 2
+        else:
+            raise ValueError("Not a cat, dog or person !!")
 
 ```
 
-Commiting this results in the creation of a new field, `image_resized` with type `File[png]`, and in the application of the transformation to populate that field.
+Commiting this results in the creation of a new field, `image_resized_512x512` with type `File[png]`, and in the application of the transformation to populate that field. This transform is only applied again if one value happens to be missing.
 
 Additionally, multi-stage transformations are possible:
 
@@ -109,39 +111,120 @@ Additionally, multi-stage transformations are possible:
 
 @dataset
 class SegmentationDataset:
-    image: File[png | jpg]
-    segmentation: File[png]
+    image: File[jpg]
+    label: Literal["cat", "dog", "person"]
 
-    def image_resized(image: File[png | jpg]) -> File[png]:
+    def image_resized_512x512(image: File[jpg]) -> File[png]:
+
         ... # perform resize
-        return file # instance of `File[png]``
 
-    def image_resized_plus_brightness(image_resized: File[png]) -> File[png]:
-        ... # add brightness
-        return file # instance of `File[png]``
+        return file
 
-    def image_plus_resized(image: File[png | jpg], image_resized: File[png]) -> File[png]:
-        ... # do stuff with both files
-        return file # instance of `File[png]``
+    def encoded_label(label: Literal["cat", "dog", "person"]) -> Literal[0, 1, 2]:
+        if label == "cat":
+            return 0
+        elif label == "dog":
+            return 1
+        elif label == "person":
+            return 2
+        else:
+            raise ValueError("Not a cat, dog or person !!")
+
+    def example_field(
+        image_resized_512x512: File[png],
+        encoded_label: Literal[0, 1, 2],
+    ) -> File[png]:
+
+        ... # do stuff
+
+        return file
 
 ```
 
-# And vertical transformations ?
+## Transformations on every commit, sounds like it could get annoying.
 
-For editing individual rows you can use `Action`:
+
+A lot of transformations will be blocking if you have a large dataset. These are the attenuating factors:
+
+1. Commiting will only lock changes to the `index.py` file, letting you work while you wait for the processing to take place. (live inspection during transformations will be possible via `python index.py --sql-shell` or `python index.py --python-shell` or `python index.py --jupyter-notebook`, etc)
+2. It will be possible to mark certain transformations to be skiped (with `@skip`)
+3. It will also be possible to mark transformations to be consumed by a github workflow (with `@cicd`)
+4. For truly large datasets, an integration with spark will be available. (possibly with `@spark`, but probably a deeper integration, still researching)
+
+
+
+```python 
+
+@dataset
+class SegmentationDataset:
+    image: File[jpg]
+    label: Literal["cat", "dog", "person"]
+
+    @skip
+    def field_to_skip(image: File[jpg]) -> File[png]:
+
+        ... # perform resize
+
+        return file
+
+    @cicd
+    def field_for_cicd(image: File[jpg]) -> File[png]:
+
+        ... # perform resize
+
+        return file
+
+    @spark
+    def field_for_spark(image: File[jpg]) -> File[png]:
+
+        ... # perform resize
+
+        return file
+
+```
+
+Furthermore, commits only cause a transformation when there is a "delta" in the file that requires it.
+
+Adding a new transformation will cause a transformation. Adding a docstring will not cause any transformation to occur. 
+
+Processing only occurs when:
+
+- a new transformation is added
+- new data is added
+- results from a current transformation are missing
+
+And finally, of course, paralelization will be used when possible.
+
+## Still, is the transformation on commit thing really necessary ? 
+
+There are two parts to this:
+
+1. The code that is used to execute the transformation
+2. The result of a *successful* transformation
+
+By tying these two toguether with a commit, **we have now turned the commit into an imutable snapshot of the dataset**.
+
+Each commit is tied to the resulting (versioned) parquet file which itself points to any resulting files. 
+
+
+
+## What about row transformations ?
+
+For editing individual rows you can use `Action` again:
 
 ```python
 @dataset
 class SegmentationDataset:
-    image: File[png | jpg]
+    image: File[jpg]
     segmentation: File[png]
+    label: str
 
-    def delete_corrupted_files(image: File[png | jpg]) -> Action.Delete:
+    def delete_corrupted_files(image: File[jpg]) -> Action.Delete:
+
         ... # perform some checks, get image_is_corrupted: bool
-        return True if image_is_corrupted else False
-```
 
-Note that by declaring `Action` as a return type, you inform git-datasets that a new field is not to be created (like in the previous example), instead, current values will be altered.
+        return image_is_corrupted
+```
 
 Transformations always occur once, on the first time they are commited.
 
@@ -150,22 +233,29 @@ For more control over which rows you are iterating:
 ```python
 @dataset
 class SegmentationDataset:
-    image: File[png | jpg]
+    image: File[jpg]
     segmentation: File[png]
+    label: str
 
     @range(1, 10, 3)
-    def transformation_2(image: File[png | jpg]) -> Action.Delete:
+    def transformation_2(image: File[jpg]) -> Action.Delete:
+
         ... # perform some checks
+
         return False if image_checks_out else True
 
     @index(10)
     def transformation_3() -> Action.Delete:
+
         ... # perform some checks
+
         return True
 
     @index(11)
-    def transformation_4(image: File[png | jpg], segmentation: File[png]) -> Action.Alter:
+    def transformation_4(image: File[jpg], segmentation: File[png]) -> Action.Alter:
+
         ... # get data
+
         return new_image, new_segmentation
 ```
 
@@ -174,14 +264,35 @@ You can also declare `None` as the return type for no action. This is useful if 
 ```python
 @dataset
 class SegmentationDataset:
-    image: File[png | jpg]
+    image: File[jpg]
     image_segmentation: File[png]
 
-    def ensure_rgb(image: File[png | jpg]) -> None:
+    def ensure_rgb(image: File[jpg]) -> None:
+
         ... # load image
+
         assert image.size[2] == 3
 
 ```
+
+
+## Where are files going ?
+
+Files go into the `.git` folder, but they are uploaded to your chosen cloud provider.
+
+For example, you'd link your repository to a bucket via
+
+```
+git datasets link --provider "AWS" --bucket $AWS_BUCKET`
+```
+
+you'd do this once, but credentions would be provided on a per user basis.
+
+
+## But my dataset is large, I can't fit it into my computer.
+
+You setup a memory limit. Once that limit is reached, only a snapshot of the dataset is kept. Files are cycled on demand as needed.
+
 
 ## How important are the type hints ?
 
@@ -194,8 +305,10 @@ class SegmentationDataset:
     image_segmentation: File[png]
 
     @index(11)
-    def transformation_4(image: File[jpg | png]) -> Action.Alter:
+    def transformation_4(image: File[png]) -> Action.Alter:
+
         ... # get data
+
         return new_image
 
 ```
@@ -206,59 +319,14 @@ By having the type hints, I know that I need to throw an error and prevent the c
 
 ## Is git handling the files ?
 
-No, large files are uploaded to aws. Git will version the `index.py` file and possibly an internal list of files that have been uploaded to aws.
+No, large files are uploaded to your chosen cloud provider. Git will version the `index.py` file. 
 
-Aws is not strict requirement too, will be extended at later stages.
 
 ## What about scale and integrity? 
 
-At an initial phase, I'm planing data deduplication schemes and data integrity guarantees via checksums. Any structure is imposed via the sqlite database, files themselves are always cached in an hidden folder and symlinked to the places they need to be so that checking out different commits is efficient. Same goes for the aws bucket, structure is imposed by the repository, the bucket will just have a lot of files pointing to it. 
-
-## SQLite for ML datasets ?
-
-Not a hard requirement and will be changed at later stages. I will likely support various db types. 
-
-## Isn't it a lot of overhead added to git commands ?
-
-Depends on the dataset size and the transformations you are doing.
-
-A lot will be done to aliviate this issue:
-
-- a `@skip` decorator that let's you commit a transformation without running it (so you can share it)
-- transformations fetch data on demand and only the data that is needed to populate the fields
-- a `@cicd` decorator so that certain transformations can be delegated to a remote somewhere 
-
-on top of this, note that:
-
-The command
-
-```
-git commit index.py
-```
-
-will process data only if:
-
-- a new transformation is added
-- new data is added
-- results from a current transformation are missing
-
-the dataset is not processed from scratch, only the "deltas" in the `index.py` file can cause a change.
-
-```
-git checkout
-```
-
-will just change the contents of `index.py` file. The file structure only changes when you do `git pull` afterwards.
+I'm planing data deduplication schemes and data integrity guarantees via checksums. 
 
 
-```
-git push
-```
-
-will only upload the files that are not already in remote. Data integrity checks are done before pushing. Deduplication is in place.
-
-
-But even so - this does not scale for medium-large, large and collossal datasets. My only answer to this is, if there's a real need later, I'll build a self-hosted solution that let's people offload a lot of the work to a remote. Right now, this is a one man side project. In the end, the objective is for me to push myself to the limits while trying to solve what I perceive to be a real problem in the comunity.
 
 
 ## What happens when there is a merge conflict ?
@@ -275,48 +343,13 @@ If some commit does not make sense and generates integrity issues. The commits w
 
 Git status will always indicate if the index.py files are truthful or not. Checking out commits and branches will always issue a warning if an index.py file is not truthful. The lest non-corrupted commit is included in the large commit message.
 
-## But the index.py file doesn't really paint the whole picture. What happens when conflicts occur on details that `index.py` is not aware of ?
-
-The full picture is painted by the commit history.
-
-Inside the `.git` folder I will be keeping sparse checkpoints of the database.
-
-Each commit might have a checkpoint, or it might have a diff tha transforms the last checkpoint into the desired state.
-
-Diffs are kept in the cloud provider and once they are there, they cannot be unlinked from a commit.
-
-
-
-That's true, while a commited `index.py` file is always truthful, by allowing transformations to be removed it will never really paint the whole picture. Painting the full picture is not the point, , the point is to paint an accurate and sufficient picture of the dataset so that you not only know what's going on at a glance, but also so that a lot of details can be assumed due to the trust mechanism. The full picture is told via the commit history of the `index.py` file.
 
 
 
 
-## How do you inspect data ?
-
-Files are stored in folders with the same name as the fields in the schema. The name of each file has the form `[id].[checksum].[mimetype]`, for example: `21.2ef7bde608ce5404e97d5f042f95f89f1c232871.png`. So they can inspected quite easily. As for the database:
-
-```
-python index.py --sql-shell
-```
-
-which will open the sqlite shell in read only mode. 
-
-## There's quite a lot of hidden complexity here, especially when it comes to resolving conflicts.
-
-Yes.
-
-At this point, it is not obvious to me how I can fight it. So I'm just gonna go on a trial and error basis, get some experience with the problem and brainstorm ideas later.
-
-For the first prototype, I'm going to assume that these conflicts don't occur. For the second, I'll assume they only occur on the local machine, for the third I'll account for remote changes. By the fourth, I'll be able to truly address this problem.
-
-In the end, my focus is going to be on **not adding another layer of complexity to the git commands**. My objective is for this tool to be invisible, so reliable that you forget it is there - this might not be possible, but I won't find out until I get to a later stage.
-
-## Dependency on git ?
+## Dependency on git ? Isn't it a large learning curve, especially for someone not familiar to git ?
 
 Yes, I love git, this a git extension. 
-
-## Isn't it a large learning curve, especially for someone not familiar to git ?
 
 For someone who uses git, this will be second nature to them. That is my objective at least.
 
@@ -338,15 +371,15 @@ class MedicalDiagnosisDataset:
     diagnosis: str
 
     # Initial method to populate the dataset from the hospital database
-    def fetch_initial_data(
-        patient_id: str,
-        age: int,
-        weight: float,
-        height: float,
-        mri_scan: File[dicom],
-        radiologist_note: File[txt],
-        diagnosis: str,
-    ) -> Action.Insert:
+    def fetch_initial_data() -> Action.Insert[{
+        "patient_id": str,
+        "age": int,
+        "weight": float,
+        "height": float,
+        "mri_scan": File[dicom],
+        "radiologist_note": File[txt],
+        "diagnosis": str,
+    }]:
         ... # fetch from a medical DB, ensuring data privacy and de-identification
         return [
             ("patient_001", 45, 70.5, 175.0, mri_1, note_1, "Benign"),
@@ -380,6 +413,12 @@ class MedicalDiagnosisDataset:
 - https://github.com/iterative/dvc
 - https://github.com/dolthub/dolt
 
+## Important stuff 
+
+- https://spark.apache.org/
+- https://parquet.apache.org/
+- https://delta.io/
+- https://libcloud.apache.org
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
