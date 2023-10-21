@@ -349,7 +349,9 @@ I'm planing data deduplication schemes and data integrity guarantees via checksu
 
 ## What happens when there is a merge conflict ?
 
-Merge conflicts are resolved directly in the `index.py` file. The state of the dataset can always be derived from its previous commit and its current commit. So after resolving a conflict, that's what determines what happens to the data.
+Merge conflicts are resolved directly in the `index.py` file. 
+
+During a merge, the state of the schema is decided (via index.py), the data from both commits is merged and transformations are applied to fill any empty fields.
 
 ## What happens if someone commits without `git-datasets` ?
 
