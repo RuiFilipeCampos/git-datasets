@@ -1,6 +1,6 @@
 """ TODO: docstring """
 
-from .types import SQLTypeStrLit
+from git_datasets.types import SQLTypeStrLit
 
 PYTHON_TO_SQLITE3: dict[type, SQLTypeStrLit] = {
     str: "TEXT",

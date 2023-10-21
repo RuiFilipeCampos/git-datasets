@@ -22,6 +22,12 @@ Note:
   while those prefixed with `_modify` perform changes to their respective targets.
 """
 
+from git_datasets.types import DatasetSchema, DecoratedClass, DiffSchema, PathStr
+
+
+# TODO: fix this
+Cursor = None
+
 
 # logic used by @dataset, all function definitions appear in the same order
 
