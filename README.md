@@ -206,6 +206,24 @@ By tying these two toguether with a commit, **we have now turned the commit into
 
 Each commit is tied to the resulting (versioned) parquet file which itself points to any resulting files. 
 
+## Wait, but what if I want to run some code without commiting ?
+
+You can run `python index.py` just fine. It will run transformations, it just won't save any result. For example you can make a plot:
+
+```python
+@dataset
+class SegmentationDataset:
+    image: File[jpg]
+    label: Literal["cat", "dog", "person"]
+
+    @index(12)
+    def plot_some_image(image: File[jpg]) -> None:
+        image_array = image.to_numpy_array()
+        plt.imshow(image_array)
+        plt.show()
+```
+
+
 
 
 ## What about row transformations ?
