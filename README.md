@@ -56,7 +56,7 @@ class SegmentationDataset:
     def get_data_from_web() -> Action.Insert[{
         "image": File[jpg],
         "label": Literal["cat", "dog", "person"],
-    }]
+    }]:
 
         ... # perform some requests, massage data into the correct form
 
@@ -206,6 +206,24 @@ By tying these two toguether with a commit, **we have now turned the commit into
 
 Each commit is tied to the resulting (versioned) parquet file which itself points to any resulting files. 
 
+## Wait, but what if I want to run some code without commiting ?
+
+You can run `python index.py` just fine. It will run transformations, it just won't save any result. For example you can make a plot:
+
+```python
+@dataset
+class SegmentationDataset:
+    image: File[jpg]
+    label: Literal["cat", "dog", "person"]
+
+    @index(12)
+    def plot_some_image(image: File[jpg]) -> None:
+        image_array = image.to_numpy_array()
+        plt.imshow(image_array)
+        plt.show()
+```
+
+
 
 
 ## What about row transformations ?
@@ -331,7 +349,9 @@ I'm planing data deduplication schemes and data integrity guarantees via checksu
 
 ## What happens when there is a merge conflict ?
 
-Merge conflicts are resolved directly in the `index.py` file. The state of the dataset can always be derived from its previous commit and its current commit. So after resolving a conflict, that's what determines what happens to the data.
+Merge conflicts are resolved directly in the `index.py` file. 
+
+During a merge, the state of the schema is decided (via index.py), the data from both commits is merged and transformations are applied to fill any empty fields.
 
 ## What happens if someone commits without `git-datasets` ?
 
