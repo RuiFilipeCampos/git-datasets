@@ -36,7 +36,8 @@ Let's say you want a dataset with images and object segmentations. Your `index.p
 
 ```python
 from typing import Literal
-from git_datasets import dataset, File, jpg
+from git_datasets import dataset
+from git_datasets.files import File, jpg
 
 @dataset
 class ImageClassificationDataset:
