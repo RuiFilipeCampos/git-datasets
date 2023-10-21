@@ -53,7 +53,8 @@ Declare a method with return type of `Action.Insert`:
 
 ```python
 from typing import Literal
-from git_datasets import dataset, File, jpg, Action
+from git_datasets import dataset, Action
+from git_datasets.files import File, jpg
 
 @dataset
 class SegmentationDataset:
@@ -120,7 +121,8 @@ Additionally, multi-stage transformations are possible:
 
 ```python
 from typing import Literal
-from git_datasets import dataset, File, jpg, png
+from git_datasets import dataset
+from git_datasets import File, jpg, png
 
 @dataset
 class SegmentationDataset:
@@ -219,7 +221,8 @@ There are two parts to this:
 
 By tying these two toguether with a commit, **we have now turned the commit into an imutable snapshot of the dataset**.
 
-Each commit is tied to the resulting (versioned) parquet file which itself points to any resulting files. 
+Each commit is tied to the resulting (versioned) parquet file which itself points to any resulting files.
+
 
 ## Wait, but what if I want to run some code without commiting ?
 
