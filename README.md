@@ -56,7 +56,7 @@ class SegmentationDataset:
     def get_data_from_web() -> Action.Insert[{
         "image": File[jpg],
         "label": Literal["cat", "dog", "person"],
-    }]
+    }]:
 
         ... # perform some requests, massage data into the correct form
 
