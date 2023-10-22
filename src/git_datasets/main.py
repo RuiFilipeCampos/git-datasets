@@ -16,9 +16,12 @@ def dataset(cls: DecoratedClass) -> DecoratedClass:
 
     args = parse_args()
 
-    with DatasetRunConfig.init() as config:
+    init_args = {
+        "dataset_name": cls.__name__.lower(),
+    }
+
+    with DatasetRunConfig.init(**init_args) as config:
         if args.pre_commit:
-            logger.info("Pre commiting dataset.")
             pre_commit(cls, config)
         elif args.pull:
             pull(cls, config)

@@ -8,26 +8,18 @@ python index.py --pre-commit
 ```
 
 is executed. Which itself is called as a git hook by `git commit index.py`. 
-
-Note:
-- The functions prefixed with `_get` are pure and have no side effects, 
-  while those prefixed with `_modify` perform changes to their respective targets.
 """
 
 from git_datasets.types import DecoratedClass
 from git_datasets.config import DatasetRunConfig
+from git_datasets.logging import get_logger
 
+logger = get_logger(__name__)
 
 def pre_commit(cls: DecoratedClass, config: DatasetRunConfig) -> None:
     """ Pre commit dataset. """
-
-
-
-
-
-
-
-
+    logger.error("Pre-commit not implemented.")
+    raise SystemExit
 
 
     # note: _get* are pure functions, no side effects

@@ -4,13 +4,16 @@ Configuration and utilities for dataset run settings in the context of a git rep
 
 """
 
-from dataclasses import dataclass
 import os
 import sys
+from dataclasses import dataclass
 from contextlib import contextmanager
 from typing import ContextManager, Type
 
 from git_datasets.git_operations import get_git_root_path
+from git_datasets.logging import get_logger
+
+logger = get_logger(__name__)
 
 @dataclass
 class DatasetRunConfig:
@@ -25,24 +28,26 @@ class DatasetRunConfig:
     # Path to the hidden directory
     hidden_dir: str = os.path.join(repository_root, ".gitdatasets")
 
+    dataset_name: str
 
     @classmethod
     @contextmanager
-    def init(cls: Type["DatasetRunConfig"]) -> ContextManager["DatasetRunConfig"]:
-        """  Context manager to initialize and manage a `DatasetRunConfig` 
+    def init(
+        cls: Type["DatasetRunConfig"],
+        *,
+        dataset_name: str,
+    ) -> ContextManager["DatasetRunConfig"]:
+        """ Context manager to initialize and manage a `DatasetRunConfig` 
         instance. """
 
-        self = cls()
+        self = cls(dataset_name=dataset_name)
 
         if not os.path.exists(self.hidden_dir):
             os.mkdir(self.hidden_dir)
+            logger.info("Created hidden configuration folder at %s.", self.hidden_dir)
 
         try:
             yield self
         finally:
             ...
-            # TODO: cleanup 
-
-
-
-
+            # TODO: cleanup
