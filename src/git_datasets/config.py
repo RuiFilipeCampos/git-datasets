@@ -21,7 +21,6 @@ class DatasetRunConfig:
 
     dataset_name: str
 
-
     # Path to the script being run.
     main_script_path: str = os.path.abspath(sys.argv[0])
 
@@ -31,6 +30,8 @@ class DatasetRunConfig:
     # Path to the hidden directory
     hidden_dir: str = os.path.join(repository_root, ".gitdatasets")
 
+    parquet_file: str = os.path.join(hidden_dir, "db.parquet")
+
 
     @classmethod
     @contextmanager
@@ -38,7 +39,6 @@ class DatasetRunConfig:
         cls: Type["DatasetRunConfig"],
         *,
         dataset_name: str,
-
     ) -> ContextManager["DatasetRunConfig"]:
         """ Context manager to initialize and manage a `DatasetRunConfig` 
         instance. """
@@ -52,5 +52,5 @@ class DatasetRunConfig:
         try:
             yield self
         finally:
+            # self.spark.stop()
             logger.debug("Exited git-datasets.")
-

@@ -23,15 +23,25 @@ class ColoredConsoleHandler(logging.StreamHandler):
         'DEBUG': '\033[92m',    # Green
         'CRITICAL': '\033[91m', # Red
         'ERROR': '\033[91m',    # Red
-        'DEFAULT': '\033[0m'    # Reset
+        'DEFAULT': '\033[0m',    # Reset
+        'TIMESTAMP': '\033[3m'  # Very Light Gray (Bright White)
+
     }
 
     def emit(self, record) -> None:
         # Change level name to title case (e.g., "ERROR" to "Error")
         record.levelname = record.levelname.title()
-        color = self.COLORS.get(record.levelname.upper(), self.COLORS['DEFAULT'])
         msg = self.format(record)
+
+        # Colorize the timestamp
+        timestamp_end = msg.find(': ') + 1
+        timestamp_colored = self.COLORS['TIMESTAMP'] + msg[:timestamp_end] + self.COLORS['DEFAULT']
+        msg = timestamp_colored + msg[timestamp_end:]
+
+        # Colorize the log level
+        color = self.COLORS.get(record.levelname.upper(), self.COLORS['DEFAULT'])
         msg = msg.replace(record.levelname + ':', color + record.levelname + ':' + self.COLORS['DEFAULT'])
+
         self.stream.write(msg + '\n')
         self.stream.flush()
 
@@ -42,7 +52,7 @@ logging.config.dictConfig({
     'disable_existing_loggers': False,
     'formatters': {
         'default': {
-            'format': '%(levelname)s: %(message)s'
+            'format': '%(asctime)s: %(levelname)s: %(message)s'
         },
     },
     'handlers': {
@@ -62,3 +72,4 @@ def get_logger(name: str) -> ExtendedLogger:
     """Returns an instance of the ExtendedLogger for the specified name."""
 
     return logging.getLogger(name)
+

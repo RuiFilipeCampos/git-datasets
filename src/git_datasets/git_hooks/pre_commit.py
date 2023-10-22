@@ -14,81 +14,44 @@ from git_datasets.types import DecoratedClass
 from git_datasets.config import DatasetRunConfig
 from git_datasets.logging import get_logger
 
+
 logger = get_logger(__name__)
 
 def pre_commit(cls: DecoratedClass, config: DatasetRunConfig) -> None:
     """ Pre commit dataset. """
+
+    # avoiding unnecessary imports until needed (this is a cli command)
+    from typing import get_type_hints
+    from git_datasets.parquet import ParquetFileHandler
+    from git_datasets.types import Action
+
+    parquet_handler = ParquetFileHandler(config.parquet_file)
+    current_schema = parquet_handler.get_schema()
+    desired_schema = cls.__annotations__
+
+    for attribute_name in dir(cls):
+
+        if attribute_name.startswith("__"):
+            continue
+
+        attribute = getattr(cls, attribute_name)
+
+        if not callable(attribute):
+            continue
+        
+        return_type = get_type_hints(attribute).get('return')
+
+        if return_type in [Action.Insert, Action.Alter, Action.Delete]:
+            continue
+
+        if attribute_name in desired_schema:
+            raise ValueError
+
+        desired_schema[attribute_name] = return_type
+
+    logger.debug("Current schema: %s", current_schema)
+    logger.debug("Desired schema: %s", desired_schema)
+
+
     logger.error("Pre-commit not implemented.")
     raise SystemExit
-
-
-    # note: _get* are pure functions, no side effects
-    # while _modify* is the opposite
-
-    # handle horizontal (schema) changes
-    # desired_schema = _get_desired_schema(cls)
-    # current_schema = _get_current_schema(cursor, cls.__name__)
-    # diff_schema = _get_schema_diff(current_schema, desired_schema)
-    # del current_schema, desired_schema
-
-    # if len(diff_schema) != 0:
-    #     _modify_sql_database_schema(cursor, diff_schema)
-    #     _modify_data_directory_structure(data_dir, diff_schema)
-
-    # # handle vertical (row) changes
-
-    # ...
-
-
-# logic used by @dataset, all function definitions appear in the same order
-
-# def _get_desired_schema(cls: DecoratedClass) -> DatasetSchema:
-#     """
-#     Extracts the desired schema from the provided class based on its annotations.
-#     """
-
-#     field_to_type_mapping = cls.__annotations__.items()
-
-#     return {
-#         field_name: PYTHON_TO_SQLITE3[field_type]
-#         for field_name, field_type
-#         in field_to_type_mapping
-#     }
-
-# def _get_current_schema(cursor: Cursor, table_name: str) -> DatasetSchema:
-#     """
-#     Queries and retrieves the current schema of the specified table.
-#     """
-
-#     schema_query = SQLCommandGenerator.schema_query_cmd(table_name)
-#     cursor.execute(schema_query)
-#     logger.debug("Executed SQL: %s", schema_query)
-#     return { column[1]: column[2] for column in cursor.fetchall() }
-
-
-# def _get_schema_diff(
-#     current_schema: DatasetSchema, desired_schema: DatasetSchema
-# ) -> DiffSchema:
-#     """
-#     Compute the difference between the desired schema and the current schema.
-#     """
-
-#     print(current_schema)
-#     print(desired_schema)
-#     return {}
-
-
-# def _modify_sql_database_schema(cursor: Cursor, diff_schema: DiffSchema) -> None:
-#     """
-#     Apply schema changes based on the computed difference.
-#     """
-#     print(cursor)
-#     print(diff_schema)
-
-
-# def _modify_data_directory_structure(data_dir: PathStr, diff_schema: DiffSchema) -> None:
-#     """
-#     Apply directory changes based on the computed difference.
-#     """
-#     print(data_dir)
-#     print(diff_schema)
