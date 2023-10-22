@@ -2,33 +2,32 @@
 main.py - Entrypoint for the git-datasets package.
 """
 
-import logging
-
 from git_datasets.cli import parse_args
 from git_datasets.config import DatasetRunConfig
+from git_datasets.logging import get_logger
 from git_datasets.types import DecoratedClass
 
 from git_datasets.git_hooks import pre_commit, pull, push, checkout
 
-
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger("git_datasets")
+logger = get_logger(__name__)
 
 def dataset(cls: DecoratedClass) -> DecoratedClass:
-    """ TODO """
+    """ Register an annotated class as a dataset.  """
 
     args = parse_args()
-    config = DatasetRunConfig()
 
-    if args.pre_commit:
-        pre_commit(cls, config)
-    elif args.pull:
-        pull(cls, config)
-    elif args.push:
-        push(cls, config)
-    elif args.post_checkout:
-        checkout(cls, config)
-    else:
-        raise NotImplementedError("Read mode not implemented.")
+    with DatasetRunConfig.init() as config:
+        if args.pre_commit:
+            logger.info("Pre commiting dataset.")
+            pre_commit(cls, config)
+        elif args.pull:
+            pull(cls, config)
+        elif args.push:
+            push(cls, config)
+        elif args.post_checkout:
+            checkout(cls, config)
+        else:
+            logger.error("Read mode not implemented.")
+            raise SystemExit
 
     return cls

@@ -21,16 +21,16 @@ SQLTypeStrLit = Literal["TEXT", "INTEGER", "REAL", "BLOB", "NULL"]
 DatasetSchema = dict[FieldNameStr, SQLTypeStrLit]
 
 
-class Action:
+class Action(type):
     """ Actions for row transformations. """
 
-    class Insert:
+    class Insert(type):
         """ Add data to the dataset. """
 
-    class Delete:
+    class Delete(type):
         """ Delete data from the dataset. """
 
-    class Alter:
+    class Alter(type):
         """ Change data. """
 
 
