@@ -19,6 +19,9 @@ logger = get_logger(__name__)
 class DatasetRunConfig:
     """ Configuration for Dataset runs within a git repository context. """
 
+    dataset_name: str
+
+
     # Path to the script being run.
     main_script_path: str = os.path.abspath(sys.argv[0])
 
@@ -28,7 +31,6 @@ class DatasetRunConfig:
     # Path to the hidden directory
     hidden_dir: str = os.path.join(repository_root, ".gitdatasets")
 
-    dataset_name: str
 
     @classmethod
     @contextmanager
@@ -36,6 +38,7 @@ class DatasetRunConfig:
         cls: Type["DatasetRunConfig"],
         *,
         dataset_name: str,
+
     ) -> ContextManager["DatasetRunConfig"]:
         """ Context manager to initialize and manage a `DatasetRunConfig` 
         instance. """
