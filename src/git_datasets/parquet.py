@@ -13,6 +13,7 @@ class ParquetFileHandler:
         """ TODO """
 
         import pyarrow as pa
+
         self.python_to_arrow = {
             str: pa.string(),
             int: pa.int32(),
