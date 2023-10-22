@@ -21,6 +21,20 @@ SQLTypeStrLit = Literal["TEXT", "INTEGER", "REAL", "BLOB", "NULL"]
 DatasetSchema = dict[FieldNameStr, SQLTypeStrLit]
 
 
+class Action:
+    """ Actions for row transformations. """
+
+    class Insert:
+        """ Add data to the dataset. """
+
+    class Delete:
+        """ Delete data from the dataset. """
+
+    class Alter:
+        """ Change data. """
+
+
+
 def validate_arguments(func: Callable) -> Callable:
     """ Runtime validation of function arguments. """
 

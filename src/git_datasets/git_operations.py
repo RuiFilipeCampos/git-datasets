@@ -6,7 +6,6 @@ It leverages the command-line interface of Git to achieve these functionalities.
 """
 
 import subprocess
-import os
 
 def get_git_root_path() -> str | None:
     """ Retrieve the root path of the current Git repository. """

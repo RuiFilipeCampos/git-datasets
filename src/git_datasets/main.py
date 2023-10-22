@@ -8,10 +8,7 @@ from git_datasets.cli import parse_args
 from git_datasets.config import DatasetRunConfig
 from git_datasets.types import DecoratedClass
 
-from git_datasets.git_hooks.pre_commit import pre_commit
-from git_datasets.git_hooks.pull import pull
-from git_datasets.git_hooks.push import push
-from git_datasets.git_hooks.checkout import checkout
+from git_datasets.git_hooks import pre_commit, pull, push, checkout
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -35,4 +32,3 @@ def dataset(cls: DecoratedClass) -> DecoratedClass:
         raise NotImplementedError("Read mode not implemented.")
 
     return cls
-
