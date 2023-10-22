@@ -35,6 +35,10 @@ Every dataset has an `index.py` file. The promise? A committed `index.py` always
 Let's say you want a dataset with images and object segmentations. Your `index.py` could look like this:
 
 ```python
+from typing import Literal
+from git_datasets import dataset
+from git_datasets.files import File, jpg
+
 @dataset
 class ImageClassificationDataset:
     image: File[jpg]
@@ -48,6 +52,10 @@ First, you set this up as a dataset using `git datasets new index.py`. When you 
 Declare a method with return type of `Action.Insert`:
 
 ```python
+from typing import Literal
+from git_datasets import dataset, Action
+from git_datasets.files import File, jpg
+
 @dataset
 class SegmentationDataset:
     image: File[jpg]
@@ -78,6 +86,10 @@ All data transformations will happen on commit, leaving a traceable history of e
 For example, I might want to resize the orignal images and encode the label:
 
 ```python
+from typing import Literal
+from git_datasets import dataset, File, jpg, png
+
+
 @dataset
 class SegmentationDataset:
     image: File[jpg]
@@ -108,6 +120,9 @@ Additionally, multi-stage transformations are possible:
 
 
 ```python
+from typing import Literal
+from git_datasets import dataset
+from git_datasets import File, jpg, png
 
 @dataset
 class SegmentationDataset:
@@ -154,6 +169,8 @@ A lot of transformations will be blocking if you have a large dataset. These are
 
 
 ```python 
+from typing import Literal
+from git_datasets import dataset, File, jpg, png
 
 @dataset
 class SegmentationDataset:
@@ -204,13 +221,17 @@ There are two parts to this:
 
 By tying these two toguether with a commit, **we have now turned the commit into an imutable snapshot of the dataset**.
 
-Each commit is tied to the resulting (versioned) parquet file which itself points to any resulting files. 
+Each commit is tied to the resulting (versioned) parquet file which itself points to any resulting files.
+
 
 ## Wait, but what if I want to run some code without commiting ?
 
 You can run `python index.py` just fine. It will run transformations, it just won't save any result. For example you can make a plot:
 
 ```python
+from typing import Literal
+from git_datasets import dataset, File, jpg
+
 @dataset
 class SegmentationDataset:
     image: File[jpg]
@@ -224,13 +245,14 @@ class SegmentationDataset:
 ```
 
 
-
-
 ## What about row transformations ?
 
 For editing individual rows you can use `Action` again:
 
 ```python
+from typing import Literal
+from git_datasets import dataset, File, jpg, png, Action
+
 @dataset
 class SegmentationDataset:
     image: File[jpg]
@@ -249,6 +271,9 @@ Transformations always occur once, on the first time they are commited.
 For more control over which rows you are iterating:
 
 ```python
+from typing import Literal
+from git_datasets import dataset, File, jpg, png, Action
+
 @dataset
 class SegmentationDataset:
     image: File[jpg]
@@ -280,6 +305,9 @@ class SegmentationDataset:
 You can also declare `None` as the return type for no action. This is useful if you want to implement some check:
 
 ```python
+from typing import Literal
+from git_datasets import dataset, File, jpg, png
+
 @dataset
 class SegmentationDataset:
     image: File[jpg]
@@ -317,6 +345,9 @@ You setup a memory limit. Once that limit is reached, only a snapshot of the dat
 Critical. When you commit a transformation you get to keep it in the code without it being run again on each new commit. This is good, it serves as documentation. But if you alter the schema in such a way that the transformation now does not make sense, the index.py file would now be lying to you. You would end up with something like:
 
 ```python
+from typing import Literal
+from git_datasets import dataset, File, jpg, png, Action
+
 @dataset
 class SegmentationDataset:
 
@@ -380,6 +411,9 @@ Since this is a git extension, anyone not familiar with git must learn it first 
 ### Medical dataset
 
 ```python
+from typing import Literal
+from git_datasets import dataset, File, jpg, png, txt, dicom, Action
+
 @dataset
 class MedicalDiagnosisDataset:
     patient_id: str
