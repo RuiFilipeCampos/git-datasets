@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from contextlib import contextmanager
 from typing import ContextManager, Type
 
-from git_datasets.git_operations import get_git_root_path
+from git_datasets.commands import get_git_root_path
 from git_datasets.logging import get_logger
 
 logger = get_logger(__name__)
