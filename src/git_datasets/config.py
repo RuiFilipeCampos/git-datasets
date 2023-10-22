@@ -49,5 +49,5 @@ class DatasetRunConfig:
         try:
             yield self
         finally:
-            ...
-            # TODO: cleanup
+            logger.debug("Exited git-datasets.")
+
