@@ -1,8 +1,5 @@
-""" git_operations.py
-
-This module provides utility functions to facilitate interactions with Git repositories.
-It contains operations to retrieve metadata and perform certain tasks related to Git.
-It leverages the command-line interface of Git to achieve these functionalities.
+""" 
+commands.py - interactions with the command line
 """
 
 import subprocess
