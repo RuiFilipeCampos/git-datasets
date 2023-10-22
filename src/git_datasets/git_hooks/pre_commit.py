@@ -23,10 +23,12 @@ Note:
 """
 
 from git_datasets.types import DatasetSchema, DecoratedClass, DiffSchema, PathStr
+from git_datsets.constants import PYTHON_TO_SQLITE3
 
 
 # TODO: fix this
-Cursor = None
+class Cursor:
+    """TO REMOVE"""
 
 
 # logic used by @dataset, all function definitions appear in the same order
@@ -40,7 +42,7 @@ def _get_desired_schema(cls: DecoratedClass) -> DatasetSchema:
 
     return {
         field_name: PYTHON_TO_SQLITE3[field_type]
-        for field_name, field_type 
+        for field_name, field_type
         in field_to_type_mapping
     }
 

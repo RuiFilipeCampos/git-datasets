@@ -1,4 +1,4 @@
-""" TODO: docstring """
+""" constants.py - Central repository for constants used throughout the application """
 
 from git_datasets.types import SQLTypeStrLit
 

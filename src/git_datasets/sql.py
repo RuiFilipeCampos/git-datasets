@@ -1,6 +1,6 @@
 """ TODO: docstring """
 
-from .types import DatasetSchema, SQLCmdStr, SQLTypeStrLit
+from git_datasets.types import DatasetSchema, SQLCmdStr, SQLTypeStrLit
 
 class SQLCommandGenerator:
     """

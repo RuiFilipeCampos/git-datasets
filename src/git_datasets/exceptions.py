@@ -1,4 +1,6 @@
-""" TODO: docstring """
+"""
+exceptions.py - Defines custom exceptions.
+"""
 
 
 class InvalidInputType(TypeError):
