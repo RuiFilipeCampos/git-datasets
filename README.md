@@ -198,6 +198,20 @@ class SegmentationDataset:
 
         return file
 
+    @parallel(n=10)
+    def field_in_parallel(image: File[jpg]) -> File[png]:
+
+        ... # perform resize
+
+        return file
+
+    @thread(n=10)
+    def field_in_threads(image: File[jpg]) -> File[png]:
+
+        ... # perform resize
+
+        return file
+
 ```
 
 Furthermore, commits only cause a transformation when there is a "delta" in the file that requires it.
@@ -210,7 +224,7 @@ Processing only occurs when:
 - new data is added
 - results from a current transformation are missing
 
-And finally, of course, paralelization will be used when possible.
+And finally, it will be possible to invert control so that only fields decorated by `@run` are processed. My only requirement is that the `index.py` file never lies. 
 
 ## Still, is the transformation on commit thing really necessary ? 
 
