@@ -3,7 +3,7 @@
 import os.path
 from contextlib import contextmanager
 from abc import ABC, abstractmethod
-from typing import Iterator, Any
+from typing import Iterator
 
 from git_datasets.config import DatasetRunConfig
 from git_datasets.logging import get_logger
@@ -20,7 +20,7 @@ class ParquetFileInterface(ABC):
         """ Handle connection to the parquet database """
 
     @abstractmethod
-    def set_schema(self, desired_schema: dict[str, Any]) -> None:
+    def set_schema(self, desired_schema: dict[str, object]) -> None:
         """ TODO """
 
 class ParquetFileHandler(ParquetFileInterface):
@@ -52,14 +52,14 @@ class ParquetFileHandler(ParquetFileInterface):
             ...
 
 
-    def _get_schema(self):
+    def _get_schema(self) -> dict:
         """ TODO """
         if not os.path.exists(self.parquet_file):
             logger.debug("Parquet file does not exist")
             return {}
         return {}
 
-    def set_schema(self, desired_schema: dict[str, Any]) -> None:
+    def set_schema(self, desired_schema: dict[str, object]) -> None:
         """ TODO """
 
         current_schema = self._get_schema()
@@ -84,16 +84,15 @@ class ParquetFileHandler(ParquetFileInterface):
                 self._alter_field_type(field_name, field_type)
                 continue
 
-    def _delete_field(self, field_name):
+    def _delete_field(self, field_name: str) -> None:
         """ TODO """
         logger.debug("Deleting field: '%s'", field_name)
 
-    def _add_field(self, field_name, field_type):
+    def _add_field(self, field_name: str, field_type: object) -> None:
         """ TODO """
 
         logger.debug("Adding field '%s' of type '%s'", field_name, field_type)
 
-    def _alter_field_type(self, field_name, field_type):
+    def _alter_field_type(self, field_name: str, field_type: object) -> None:
         """ TODO """
-
         logger.debug("Altering field type: '%s' to '%s'", field_name, field_type)

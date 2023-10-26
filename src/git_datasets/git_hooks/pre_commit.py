@@ -15,7 +15,6 @@ from git_datasets.config import DatasetRunConfig
 from git_datasets.logging import get_logger
 from git_datasets.exceptions import RepeatedAttributeError
 
-
 logger = get_logger(__name__)
 
 def pre_commit(cls: DecoratedClass, config: DatasetRunConfig) -> None:
