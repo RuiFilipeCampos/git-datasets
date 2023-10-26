@@ -17,3 +17,12 @@ class InvalidInputType(TypeError):
             f"Argument {self.name} should be of type {self.expected_type}, "
             f"but got {type(self.value)} instead."
         )
+
+class RepeatedAttributeError(TypeError):
+    """ TODO """
+
+    def __init__(self) -> None:
+        super().__init__(self)
+
+    def __str__(self) -> str:
+        return "Repeated name in decorated class."

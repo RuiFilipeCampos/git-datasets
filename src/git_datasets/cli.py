@@ -1,11 +1,10 @@
-""" clip.py - Command-line argument parser for git hooks and operations. """
+""" Command-line argument parser for git hooks and operations. """
 
 import argparse
 from typing import Protocol
 
-
 class ParserArgsProtocol(Protocol):
-    """ TODO """
+    """ Return values of `parse_args` """
 
     pre_commit: bool
     pull: bool
