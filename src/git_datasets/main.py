@@ -1,20 +1,29 @@
-"""
-main.py - Entrypoint for the git-datasets package.
-"""
+""" Entrypoint for the git-datasets package. """
 
 from git_datasets.logging import get_logger
-from git_datasets.cli import parse_args
-from git_datasets.hooks import GitHooks
 from git_datasets.types import DecoratedClass
-from git_datasets.parquet_vm import LocalCheckpoinstParquetVM
 
 logger = get_logger(__name__)
 
 def dataset(cls: DecoratedClass) -> DecoratedClass:
-    """ Register an annotated class as a dataset.  """
+    """ Register an annotated class as a dataset.
 
-    parquet_vm = LocalCheckpoinstParquetVM()
-    hooks = GitHooks(cls, parquet_vm)
+    TODO:
+        config = read_repo_config()
+        should read from config file in hiddne folder
+
+    """
+
+    # pylint: disable=import-outside-toplevel
+    # reason: delaying imports until needed
+
+    from git_datasets.virtual_memory import LocalCheckpoinstVM
+    virtual_memory = LocalCheckpoinstVM()
+
+    from git_datasets.hooks import GitHooks
+    hooks = GitHooks(cls, virtual_memory)
+
+    from git_datasets.cli import parse_args
     cli_args = parse_args()
 
     if cli_args.pre_commit:

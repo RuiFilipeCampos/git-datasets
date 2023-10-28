@@ -1,6 +1,6 @@
-""" TODO """
+""" Implements git hooks. """
 
-from git_datasets.parquet_vm.abstract import ParquetVirtualMemory
+from git_datasets.virtual_memory.abstract import ParquetVirtualMemory
 from git_datasets.types import DecoratedClass
 from git_datasets.commands import get_git_current_commit_hash
 from git_datasets.interpreter import cls_to_schema

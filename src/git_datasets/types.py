@@ -1,10 +1,8 @@
-""" TODO: docstring """
+""" Repository for all the types used in the codebase. """
 
 from functools import wraps
-
 from typing import Literal, Callable, get_type_hints
 from git_datasets.exceptions import InvalidInputType
-
 
 # Application types and constants
 DecoratedClass = type

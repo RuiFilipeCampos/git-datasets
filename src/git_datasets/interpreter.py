@@ -1,4 +1,4 @@
-""" TODO """
+""" Collection of utilities that extract information from the decorated class. """
 
 from git_datasets.exceptions import RepeatedAttributeError
 from git_datasets.types import DecoratedClass
