@@ -17,3 +17,17 @@ def get_git_root_path() -> str | None:
         return base_path
     except subprocess.CalledProcessError:
         return None
+
+def get_git_current_commit_hash() -> str | None:
+    """ Retrieve the current commit hash of the Git repository. """
+
+    try:
+        commands = ['git', 'rev-parse', 'HEAD']
+        commit_hash = subprocess              \
+                      .check_output(commands) \
+                      .strip()                \
+                      .decode('utf-8')
+
+        return commit_hash
+    except subprocess.CalledProcessError:
+        return None

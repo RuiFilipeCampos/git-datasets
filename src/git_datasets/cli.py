@@ -7,16 +7,19 @@ class ParserArgsProtocol(Protocol):
     """ Return values of `parse_args` """
 
     pre_commit: bool
+    post_checkout: bool
+    post_commit: bool
+
     pull: bool
     push: bool
-    post_checkout: bool
+
 
 def parse_args() -> ParserArgsProtocol:
     """
     Parses command-line arguments to determine the specified git action.
     """
     parser = argparse.ArgumentParser()
-    actions = [ "--pre-commit", "--pull", "--push", "--post-checkout"]
+    actions = [ "--pre-commit", "--pull", "--push", "--post-checkout", "--post-commit"]
     group = parser.add_mutually_exclusive_group()
     for action in actions:
         group.add_argument(action, action="store_true")
