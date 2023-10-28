@@ -6,14 +6,14 @@ from git_datasets.logging import get_logger
 from git_datasets.cli import parse_args
 from git_datasets.hooks import GitHooks
 from git_datasets.types import DecoratedClass
-from git_datasets.parquet_vm import LocalParquetVM
+from git_datasets.parquet_vm import LocalCheckpoinstParquetVM
 
 logger = get_logger(__name__)
 
 def dataset(cls: DecoratedClass) -> DecoratedClass:
     """ Register an annotated class as a dataset.  """
 
-    parquet_vm = LocalParquetVM()
+    parquet_vm = LocalCheckpoinstParquetVM()
     hooks = GitHooks(cls, parquet_vm)
     cli_args = parse_args()
 

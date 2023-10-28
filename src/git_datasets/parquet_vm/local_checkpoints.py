@@ -4,9 +4,8 @@ from git_datasets.parquet_vm.abstract import (
     ParquetVirtualMemory, RelativePath, AllowedTypes, Operation
 )
 
-
 @final
-class LocalParquetVM(ParquetVirtualMemory):
+class LocalCheckpoinstParquetVM(ParquetVirtualMemory):
     """ TODO """
 
     def __init__(self) -> None:
