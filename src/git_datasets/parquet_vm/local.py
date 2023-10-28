@@ -11,7 +11,6 @@ class LocalParquetVM(ParquetVirtualMemory):
 
     def __init__(self) -> None:
         """ TODO """
-        ...
 
     def set_schema(self, desired_schema: dict[str, AllowedTypes]) -> None:
         """ TODO """
