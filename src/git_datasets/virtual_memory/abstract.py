@@ -21,11 +21,7 @@ class VirtualMemory(ABC):
         ...
 
     @abstractmethod
-    def set_schema(self, desired_schema: dict[str, AllowedTypes]) -> None:
-        """ TODO """
-
-    @abstractmethod
-    def add_operation(self, operation: Operation) -> None:
+    def load(self, path: RelativePath) -> None:
         """ TODO """
 
     @abstractmethod
@@ -42,4 +38,12 @@ class VirtualMemory(ABC):
 
     @abstractmethod
     def pull(self, path: RelativePath) -> None:
+        """ TODO """
+
+    @abstractmethod
+    def set_schema(self, desired_schema: dict[str, AllowedTypes]) -> None:
+        """ TODO """
+
+    @abstractmethod
+    def add_operation(self, operation: Operation) -> None:
         """ TODO """

@@ -1,25 +1,28 @@
 """ Implements git hooks. """
 
-from git_datasets.virtual_memory.abstract import ParquetVirtualMemory
+from git_datasets.virtual_memory.abstract import VirtualMemory
 from git_datasets.types import DecoratedClass
 from git_datasets.commands import get_git_current_commit_hash
 from git_datasets.interpreter import cls_to_schema
+
+RelativePath = str
 
 class GitHooks:
     """ Implements the git strategy. """
 
     _cls: DecoratedClass
-    _parquet_vm: ParquetVirtualMemory
-    _commit_parquet_file: str
+    _virtual_memory: VirtualMemory
+    _commit_path: RelativePath
+    _commit_exists: bool
 
 
-    def __init__(self, cls: DecoratedClass, parquet_vm: ParquetVirtualMemory):
+    def __init__(self, cls: DecoratedClass, virtual_memory: VirtualMemory):
         """ Operations common to every git-hook """
 
         self._cls = cls
-        self._parquet_vm = parquet_vm
+        self._parquet_vm = virtual_memory
         self._commit_path = f"commits/{get_git_current_commit_hash()}"
-        self._commit_exists = self._parquet_vm.exists(self._commit_path)
+        self._commit_exists = self._virtual_memory.exists(self._commit_path)
 
 
     def pre_commit(self) -> None:
@@ -28,9 +31,10 @@ class GitHooks:
         if self._commit_exists:
             raise RuntimeError("This has been commited already.")
 
+        self._virtual_memory.load("current")
         desired_schema = cls_to_schema(self._cls)
-        self._parquet_vm.set_schema(desired_schema)
-        self._parquet_vm.write("current")
+        self._virtual_memory.set_schema(desired_schema)
+        self._virtual_memory.write("current")
 
     def post_commit(self) -> None:
         """ Pre commit dataset. """
@@ -38,7 +42,7 @@ class GitHooks:
         if self._commit_exists:
             raise RuntimeError("This has been commited already.")
 
-        self._parquet_vm.move("current", self._commit_parquet_file)
+        self._virtual_memory.move("current", self._commit_path)
 
     def pull(self) -> None:
         """ TODO """
@@ -46,7 +50,7 @@ class GitHooks:
         if self._commit_exists:
             return
 
-        self._parquet_vm.pull(self._commit_parquet_file)
+        self._virtual_memory.pull(self._commit_path)
 
     def push(self) -> None:
         """ TODO """
@@ -54,4 +58,4 @@ class GitHooks:
         if not self._commit_exists:
             raise RuntimeError("This has not been commited yet.")
 
-        self._parquet_vm.push(self._commit_parquet_file)
+        self._virtual_memory.push(self._commit_path)
