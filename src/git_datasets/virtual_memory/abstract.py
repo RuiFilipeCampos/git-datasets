@@ -1,5 +1,5 @@
-""" Defines the interface that all parquet vm's must implement in
-order to fit into the codebase. """
+""" Defines the interface that all virtual memory implementations must
+conform to in order to fit into the codebase. """
 
 from abc import ABC, abstractmethod
 from typing import Protocol, Any, Literal
@@ -14,7 +14,7 @@ class Operation(Protocol):
     data: Any
 
 class VirtualMemory(ABC):
-    """ Parquet Virtual Memory provides a virtual file system to keep parquet files. """
+    """ Provides a virtual file system. """
 
     @abstractmethod
     def __init__(self) -> None:
