@@ -14,6 +14,7 @@ from git_datasets.logging import get_logger
 from git_datasets.virtual_memory.abstract import (
     VirtualMemory, AllowedTypes, FileInterface
 )
+from git_datasets.commands import get_git_root_path
 
 
 logger = get_logger(__name__)
@@ -151,8 +152,9 @@ class LocalCheckpoinstVM(VirtualMemory):
 
     def __init__(self) -> None:
         """ TODO """
-
-        self.path_prefix = "/workspaces/git-datasets/.gitdatasets"
+        git_root = get_git_root_path()
+        self.path_prefix = os.path.join(git_root, ".gitdatasets")
+        os.makedirs(self.path_prefix, exist_ok=True)
 
     def _make_absolute(self, path: RelativePath) -> AbsolutePath:
         """ Compute absolute path. """
@@ -160,7 +162,6 @@ class LocalCheckpoinstVM(VirtualMemory):
 
     def delete(self, path: RelativePath) -> None:
         """ Remove file. """
-
         path = self._make_absolute(path)
         os.remove(path)
 

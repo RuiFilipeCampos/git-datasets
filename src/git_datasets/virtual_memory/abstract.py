@@ -11,7 +11,7 @@ AllowedTypes = type[int] | type[str] | type[float]
 
 class FileInterface(ABC):
     """ Provides a virtual interface to edit
-     a parquet file.  """
+     a parquet file. """
 
     @abstractmethod
     def set_schema(self, desired_schema: dict[str, AllowedTypes]) -> None:
@@ -48,7 +48,6 @@ class VirtualMemory(ABC):
     @abstractmethod
     def delete(self, path: RelativePath) -> None:
         """ TODO """
-
 
     @abstractmethod
     def exists(self, path: RelativePath) -> bool:
