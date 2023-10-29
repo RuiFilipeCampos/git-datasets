@@ -2,7 +2,7 @@
 
 
 cd src
-export PYTHONPATH=$PYTHONPATH:'"$(pwd)"'
+export PYTHONPATH=$PYTHONPATH:"$(pwd)"
 cd ..
 
 mkdir test-rep
