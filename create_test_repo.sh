@@ -1,5 +1,4 @@
-
-
+#!/bin/sh
 
 cd src
 export PYTHONPATH=$PYTHONPATH:"$(pwd)"
