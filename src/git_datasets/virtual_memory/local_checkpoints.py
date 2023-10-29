@@ -9,7 +9,7 @@ from duckdb import (
     connect # for generating a `DuckDBPyConnection` instance
 )
 
-from git_datasets.types import RelativePath, AbsolutePath
+from git_datasets.types import RelativePath, AbsolutePath, DatasetSQLSchema
 from git_datasets.logging import get_logger
 from git_datasets.virtual_memory.abstract import (
     VirtualMemory, AllowedTypes, FileInterface
@@ -60,60 +60,33 @@ class LocalParquetFile(FileInterface):
             self._conn.execute(sql)
             return
 
-        current_schema = self.get_schema()
+        result = self._conn.execute("PRAGMA table_info(dataset);")
+        result = result.fetchall()
+        current_schema: DatasetSQLSchema = { field[1]: field[2] for field in result }
 
         logger.debug("Current schema: %s", current_schema)
         logger.debug("Current schema: %s", desired_schema)
 
         for field_name, field_type in current_schema.items():
             if field_name not in desired_schema:
-                self._delete_field(field_name)
+                self._conn.execute(f"ALTER TABLE dataset DROP COLUMN {field_name}")
                 continue
 
             if desired_schema[field_name] != field_type:
                 new_field_type = desired_schema[field_name]
-                self._alter_field_type(field_name, new_field_type)
+                self._conn.execute(f"ALTER TABLE dataset DROP COLUMN {field_name}")
+                self._conn.execute(f"ALTER TABLE dataset ADD COLUMN {field_name} {new_field_type}")
                 continue
 
         for field_name, field_type in desired_schema.items():
             if field_name not in current_schema:
-                self._add_field(field_name, field_type)
+                self._conn.execute(f"ALTER TABLE dataset ADD COLUMN {field_name} {field_type}")
                 continue
 
             if current_schema[field_name] != field_type:
-                self._alter_field_type(field_name, field_type)
+                self._conn.execute(f"ALTER TABLE dataset DROP COLUMN {field_name}")
+                self._conn.execute(f"ALTER TABLE dataset ADD COLUMN {field_name} {field_type}")
                 continue
-
-    def _delete_field(self, field_name: str) -> None:
-        """ Delete a field from the dataset. """
-        logger.debug("Deleting field: '%s'", field_name)
-        self._conn.execute(f"ALTER TABLE dataset DROP COLUMN {field_name}")
-
-    def _add_field(self, field_name: str, field_type: object) -> None:
-        """ Add a field to the dataset. """
-        logger.debug("Adding field '%s' of type '%s'", field_name, field_type)
-        self._conn.execute(f"ALTER TABLE dataset ADD COLUMN {field_name} {field_type}")
-
-    def _alter_field_type(self, field_name: str, field_type: object) -> None:
-        """ Change the field type of a given field of the dataset. """
-        logger.debug("Altering field type: '%s' to '%s'", field_name, field_type)
-        self._delete_field(field_name)
-        self._add_field(field_name, field_type)
-
-
-    def get_schema(self) -> dict[str, str]:
-        """ TODO """
-
-        result = self._conn.execute("PRAGMA table_info(dataset);")
-        result = result.fetchall()
-
-        current_schema = {}
-
-        for field in result:
-            field_n, field_t = field[1], field[2]
-            current_schema[field_n] = field_t
-
-        return current_schema
 
     def insert(self) -> None:
         """ TODO """
@@ -127,7 +100,7 @@ class LocalParquetFile(FileInterface):
     def select(self) -> None:
         """ TODO """
 
-    def close(self):
+    def close(self) -> None:
         """ Removes the tables from memory. """
 
         self._conn.close()

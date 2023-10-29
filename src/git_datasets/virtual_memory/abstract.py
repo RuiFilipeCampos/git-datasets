@@ -2,11 +2,11 @@
 conform to in order to fit into the codebase. """
 
 from abc import ABC, abstractmethod
-from typing import Iterator
+from typing import Iterator, TypeAlias
 from git_datasets.types import RelativePath, Schema
 from contextlib import contextmanager
 
-type AllowedPythonTypes = type[int] | type[str] | type[float]
+AllowedPythonTypes: TypeAlias = type[int] | type[str] | type[float]
 
 class FileInterface(ABC):
     """ Provides a virtual interface to edit

@@ -1,19 +1,22 @@
 """ Repository for all the types used in the codebase. """
 
 from functools import wraps
-from typing import Callable, get_type_hints, Any, Unpack
+from typing import Callable, get_type_hints, Any, Unpack, TypeVar
 from git_datasets.exceptions import InvalidInputType
 from enum import Enum
+from typing import TypeAlias
 
-# Application types and constants
-type DecoratedClass = type
-type Decorator = Callable[[DecoratedClass], DecoratedClass]
+# decorators
 
-type SQLCmdStr = str
-type FieldNameStr = str
-type PathStr = str
-type RelativePath = str
-type AbsolutePath = str
+DecoratedClass: TypeAlias = type
+Decorator: TypeAlias = Callable[[DecoratedClass], DecoratedClass]
+
+# paths 
+
+PathStr: TypeAlias = str
+RelativePath: TypeAlias = str
+AbsolutePath: TypeAlias = str
+SQLCmdStr: TypeAlias = str
 
 class SQLType(Enum):
     TEXT = "TEXT"
@@ -22,13 +25,14 @@ class SQLType(Enum):
     BLOB = "BLOB"
     NULL = "NULL"
 
-type PySchema = type[int] | type[str]
+PySchema: TypeAlias = type[int] | type[str]
+FieldNameStr: TypeAlias = str
 
-type Schema[T] = dict[str, T]
-type DatasetSQLSchema = Schema[SQLType]
-type DatasetPySchema = Schema[PySchema]
+T = TypeVar("T")
 
-type AnyFunction = Callable[..., Any]
+Schema: TypeAlias = dict[FieldNameStr, T]
+DatasetSQLSchema: TypeAlias = Schema[SQLType]
+DatasetPySchema: TypeAlias = Schema[PySchema]
 
 class Action(type):
     """ Actions for row transformations. """
@@ -43,6 +47,7 @@ class Action(type):
         """ Change data. """
 
 
+AnyFunction: TypeAlias = Callable[..., Any]
 
 def validate_arguments(function: AnyFunction) -> AnyFunction:
     """ Runtime validation of function arguments. """
@@ -61,3 +66,4 @@ def validate_arguments(function: AnyFunction) -> AnyFunction:
 
         return function(*args, **kwargs)
     return wrapper
+

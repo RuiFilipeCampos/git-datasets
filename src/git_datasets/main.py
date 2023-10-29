@@ -5,6 +5,7 @@ from git_datasets.types import DecoratedClass
 
 logger = get_logger(__name__)
 
+
 def dataset(cls: DecoratedClass) -> DecoratedClass:
     """ Register an annotated class as a dataset.
 
