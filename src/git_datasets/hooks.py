@@ -18,24 +18,18 @@ class GitHooks:
     _commit_path: RelativePath
     _commit_exists: bool
 
-
     def __init__(self, cls: DecoratedClass, virtual_memory: VirtualMemory):
         """ Operations common to every git-hook """
 
         self._cls = cls
-        self._parquet_vm = virtual_memory
+        self._virtual_memory = virtual_memory
         self._commit_path = f"commits/{get_git_current_commit_hash()}"
         self._commit_exists = self._virtual_memory.exists(self._commit_path)
-
 
     def pre_commit(self) -> None:
         """ Pre commit dataset. """
 
-        if self._commit_exists:
-            raise RuntimeError("This has been commited already.")
-
         apply_transforms(self._cls, self._virtual_memory, "current")
-
 
     def post_commit(self) -> None:
         """ Pre commit dataset. """

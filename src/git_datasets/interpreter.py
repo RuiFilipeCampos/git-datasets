@@ -1,7 +1,9 @@
 """ Collection of utilities that extract information from the decorated class. """
 
 from git_datasets.exceptions import RepeatedAttributeError
-from git_datasets.types import DecoratedClass
+from git_datasets.types import DecoratedClass, RelativePath
+from git_datasets.virtual_memory.abstract import VirtualMemory
+
 
 def cls_to_schema(cls: DecoratedClass):
     """ TODO """
@@ -52,15 +54,18 @@ def get_dataset_name(cls: DecoratedClass) -> str:
     return cls.__name__.lower()
 
 
-def apply_transforms(cls, virtual_memory, path):
-    """ TODO """
+def apply_transforms(
+    cls: DecoratedClass, virtual_memory: VirtualMemory, path: RelativePath
+) -> None:
+    """ Constructs dependency graph and applies the transformations. """
 
     desired_schema = cls_to_schema(cls)
 
     with virtual_memory.open(path) as parquet_file:
         parquet_file.set_schema(desired_schema)
-        actions_graph = ActionsGraph(cls, parquet_file)
-        for action in actions_graph:
-            entries = action.get_null_entries()
-            action(entries)
+
+        # actions_graph = ActionsGraph(cls, parquet_file)
+        #for action in actions_graph:
+        #    entries = action.get_null_entries()
+        #    action(entries)
 

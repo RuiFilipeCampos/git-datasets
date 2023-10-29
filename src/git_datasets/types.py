@@ -10,6 +10,9 @@ SQLCmdStr = str
 PathStr = str
 FieldNameStr = str
 
+RelativePath = str
+AbsolutePath = str
+
 Decorator = Callable[[DecoratedClass], DecoratedClass]
 
 DiffSchema = dict[Literal["add", "remove"], list[FieldNameStr]]
