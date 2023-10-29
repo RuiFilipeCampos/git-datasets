@@ -9,7 +9,6 @@ class ParserArgsProtocol(Protocol):
     pre_commit: bool
     post_checkout: bool
     post_commit: bool
-
     pull: bool
     push: bool
 

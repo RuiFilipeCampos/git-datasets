@@ -1,7 +1,7 @@
 """ Implements the local checkpoints strategy for managing parquet files. """
 
-from contextlib import contextmanager
 import os
+from contextlib import contextmanager
 from typing import final, Iterator, Final
 
 from duckdb import (

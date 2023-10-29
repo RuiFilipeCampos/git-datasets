@@ -52,3 +52,8 @@ class GitHooks:
             raise RuntimeError("This has not been commited yet.")
 
         self._virtual_memory.push(self._commit_path)
+        
+    def post_checkout(self) -> None:
+        """ TODO """
+
+        raise NotImplementedError("Post checkout has not been implemented yet.")
