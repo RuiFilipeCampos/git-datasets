@@ -8,8 +8,6 @@ from git_datasets.interpreter import apply_transforms
 RelativePath = str
 
 
-
-
 class GitHooks:
     """ Implements the git strategy. """
 
