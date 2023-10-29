@@ -1,11 +1,9 @@
 """ Implements git hooks. """
 
 from git_datasets.virtual_memory.abstract import VirtualMemory
-from git_datasets.types import DecoratedClass
+from git_datasets.types import DecoratedClass, RelativePath
 from git_datasets.commands import get_git_current_commit_hash
 from git_datasets.interpreter import apply_transforms
-
-RelativePath = str
 
 
 class GitHooks:
