@@ -21,8 +21,13 @@ class InvalidInputType(TypeError):
 class RepeatedAttributeError(TypeError):
     """ TODO """
 
-    def __init__(self) -> None:
+    attribute_name: str
+
+    def __init__(self, attribute_name: str) -> None:
+        """ TODO """
         super().__init__(self)
+        self.attribute_name = attribute_name
 
     def __str__(self) -> str:
-        return "Repeated name in decorated class."
+        """ TODO """
+        return f"Repeated name '{self.attribute_name}' in decorated class."
