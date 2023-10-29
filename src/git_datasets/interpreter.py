@@ -50,3 +50,17 @@ def get_dataset_name(cls: DecoratedClass) -> str:
     """ TODO """
 
     return cls.__name__.lower()
+
+
+def apply_transforms(cls, virtual_memory, path):
+    """ TODO """
+
+    desired_schema = cls_to_schema(cls)
+
+    with virtual_memory.open(path) as parquet_file:
+        parquet_file.set_schema(desired_schema)
+        actions_graph = ActionsGraph(cls, parquet_file)
+        for action in actions_graph:
+            entries = action.get_null_entries()
+            action(entries)
+

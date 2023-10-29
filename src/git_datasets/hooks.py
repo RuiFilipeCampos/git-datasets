@@ -3,9 +3,12 @@
 from git_datasets.virtual_memory.abstract import VirtualMemory
 from git_datasets.types import DecoratedClass
 from git_datasets.commands import get_git_current_commit_hash
-from git_datasets.interpreter import cls_to_schema
+from git_datasets.interpreter import apply_transforms
 
 RelativePath = str
+
+
+
 
 class GitHooks:
     """ Implements the git strategy. """
@@ -31,10 +34,8 @@ class GitHooks:
         if self._commit_exists:
             raise RuntimeError("This has been commited already.")
 
-        self._virtual_memory.load("current")
-        desired_schema = cls_to_schema(self._cls)
-        self._virtual_memory.set_schema(desired_schema)
-        self._virtual_memory.write("current")
+        apply_transforms(self._cls, self._virtual_memory, "current")
+
 
     def post_commit(self) -> None:
         """ Pre commit dataset. """
