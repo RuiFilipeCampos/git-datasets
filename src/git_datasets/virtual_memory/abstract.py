@@ -2,36 +2,35 @@
 conform to in order to fit into the codebase. """
 
 from abc import ABC, abstractmethod
-from typing import Protocol, Any, Literal, Iterator
+from typing import Iterator
+from git_datasets.types import RelativePath, Schema
 from contextlib import contextmanager
 
-RelativePath = str
-AllowedTypes = type[int] | type[str] | type[float]
-
+type AllowedPythonTypes = type[int] | type[str] | type[float]
 
 class FileInterface(ABC):
     """ Provides a virtual interface to edit
      a parquet file. """
 
     @abstractmethod
-    def set_schema(self, desired_schema: dict[str, AllowedTypes]) -> None:
-        """ TODO """
+    def set_schema(self, desired_schema: Schema[AllowedPythonTypes]) -> None:
+        """ Set the schema. """
 
     @abstractmethod
     def insert(self) -> None:
-        """ TODO """
+        """ Insert a new row. """
 
     @abstractmethod
     def delete(self) -> None:
-        """ TODO """
+        """ Delete an existing row. """
 
     @abstractmethod
     def alter(self) -> None:
-        """ TODO """
+        """ Modify a given row. """
 
     @abstractmethod
     def select(self) -> None:
-        """ TODO """
+        """ Select a row or column. """
 
 
 class VirtualMemory(ABC):

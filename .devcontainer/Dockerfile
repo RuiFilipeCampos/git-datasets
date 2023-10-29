@@ -1,3 +1,3 @@
-FROM python:3.12
+FROM python:3.11
 
-# Additional setup or dependencies if needed
+RUN pip install duckdb==0.9.1

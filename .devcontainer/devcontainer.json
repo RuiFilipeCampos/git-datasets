@@ -1,11 +1,12 @@
 {
-    "name": "Python 3.12 Dev Container",
+    "name": "Python 3.11 Dev Container",
     "dockerFile": "Dockerfile",
     "customizations": {
+
         "settings": {
             "python.pythonPath": "/usr/local/bin/python",
-            "python.linting.enabled": true
-            // Additional settings if needed
+            "python.linting.enabled": true,
+            "python.languageServer": "Pylance",
         },
         "vscode": {
             "extensions": [

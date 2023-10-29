@@ -16,7 +16,6 @@ from git_datasets.virtual_memory.abstract import (
 )
 from git_datasets.commands import get_git_root_path
 
-
 logger = get_logger(__name__)
 
 

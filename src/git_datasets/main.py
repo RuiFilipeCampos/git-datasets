@@ -18,12 +18,15 @@ def dataset(cls: DecoratedClass) -> DecoratedClass:
     # reason: delaying imports until needed
 
     from git_datasets.virtual_memory import LocalCheckpoinstVM
+
     virtual_memory = LocalCheckpoinstVM()
 
     from git_datasets.hooks import GitHooks
+
     hooks = GitHooks(cls, virtual_memory)
 
     from git_datasets.cli import parse_args
+
     cli_args = parse_args()
 
     if cli_args.pre_commit:

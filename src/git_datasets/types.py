@@ -5,22 +5,19 @@ from typing import Literal, Callable, get_type_hints
 from git_datasets.exceptions import InvalidInputType
 
 # Application types and constants
-DecoratedClass = type
-SQLCmdStr = str
-PathStr = str
-FieldNameStr = str
+type DecoratedClass = type
+type Decorator = Callable[[DecoratedClass], DecoratedClass]
 
-RelativePath = str
-AbsolutePath = str
+type SQLCmdStr = str
+type FieldNameStr = str
+type PathStr = str
+type RelativePath = str
+type AbsolutePath = str
+type DiffSchema = dict[Literal["add", "remove"], list[FieldNameStr]]
+type SQLTypeStrLit = Literal["TEXT", "INTEGER", "REAL", "BLOB", "NULL"]
+type DatasetSchema = dict[FieldNameStr, SQLTypeStrLit]
 
-Decorator = Callable[[DecoratedClass], DecoratedClass]
-
-DiffSchema = dict[Literal["add", "remove"], list[FieldNameStr]]
-
-SQLTypeStrLit = Literal["TEXT", "INTEGER", "REAL", "BLOB", "NULL"]
-
-DatasetSchema = dict[FieldNameStr, SQLTypeStrLit]
-
+type Schema[T] = dict[str, T]
 
 class Action(type):
     """ Actions for row transformations. """
