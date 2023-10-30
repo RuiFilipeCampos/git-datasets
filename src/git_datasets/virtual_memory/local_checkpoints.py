@@ -2,24 +2,27 @@
 
 import os
 from contextlib import contextmanager
-from typing import final, Iterator, Final
+from typing import final, Iterator, Final, Protocol, Any
 
 from duckdb import (
     DuckDBPyConnection, # for type hinting
     connect # for generating a `DuckDBPyConnection` instance
 )
 
-from git_datasets.types import RelativePath, AbsolutePath, DatasetSQLSchema
+from git_datasets.types import RelativePath, AbsolutePath, DatasetSQLSchema, SQLType
 from git_datasets.logging import get_logger
-from git_datasets.virtual_memory.abstract import (
-    VirtualMemory, AllowedTypes, FileInterface
-)
 from git_datasets.commands import get_git_root_path
+from git_datasets.virtual_memory.abstract import (
+    VirtualMemory, AllowedPythonTypes, FileInterface
+)
 
 logger = get_logger(__name__)
 
 
 __all__ = ["LocalCheckpoinstVM"]
+
+TypeMap = dict[type, SQLType]
+FieldSpec = tuple[object, str, SQLType]
 
 
 class LocalParquetFile(FileInterface):
@@ -29,7 +32,7 @@ class LocalParquetFile(FileInterface):
     _conn: DuckDBPyConnection
     _file_exists: bool
 
-    TYPE_MAP: Final[dict] = {
+    TYPE_MAP: Final[TypeMap] = {
         int: "INTEGER",
         str: "VARCHAR",
     }
@@ -44,48 +47,48 @@ class LocalParquetFile(FileInterface):
                 FROM parquet_scan('{self._path}');
             """)
 
-    def set_schema(self, desired_schema: dict[str, AllowedTypes]) -> None:
+    def set_schema(self, desired_schema: dict[str, AllowedPythonTypes]) -> None:
         """ Set the database schema. """
 
-        desired_schema = {
-            field: self.TYPE_MAP[field_t]
-            for field, field_t in desired_schema.items()
+        desired_sql_schema = {
+            field_n: self.TYPE_MAP[field_t]
+            for field_n, field_t in desired_schema.items()
         }
 
         if not self._file_exists:
             sql = 'CREATE TABLE dataset ('
-            for field, field_t in desired_schema.items():
-                sql += f'{field} {field_t},'
+            for field_n, field_t in desired_sql_schema.items():
+                sql += f'{field_n} {field_t},'
             sql += ')'
             self._conn.execute(sql)
             return
 
-        result = self._conn.execute("PRAGMA table_info(dataset);")
-        result = result.fetchall()
-        current_schema: DatasetSQLSchema = { field[1]: field[2] for field in result }
+        connection = self._conn.execute("PRAGMA table_info(dataset);")
+        result: list[FieldSpec] = connection.fetchall()
+        current_sql_schema: DatasetSQLSchema = { field[1]: field[2] for field in result }
 
-        logger.debug("Current schema: %s", current_schema)
-        logger.debug("Current schema: %s", desired_schema)
+        logger.debug("Current schema: %s", current_sql_schema)
+        logger.debug("Current schema: %s", desired_sql_schema)
 
-        for field_name, field_type in current_schema.items():
-            if field_name not in desired_schema:
+        for field_name, field_type in current_sql_schema.items():
+            if field_name not in desired_sql_schema:
                 self._conn.execute(f"ALTER TABLE dataset DROP COLUMN {field_name}")
                 continue
 
-            if desired_schema[field_name] != field_type:
-                new_field_type = desired_schema[field_name]
+            if desired_sql_schema[field_name] != field_type:
+                new_field_type = desired_sql_schema[field_name]
                 self._conn.execute(f"ALTER TABLE dataset DROP COLUMN {field_name}")
-                self._conn.execute(f"ALTER TABLE dataset ADD COLUMN {field_name} {new_field_type}")
+                self._conn.execute(f"ALTER TABLE dataset  ADD COLUMN {field_name} {new_field_type}")
                 continue
 
-        for field_name, field_type in desired_schema.items():
-            if field_name not in current_schema:
+        for field_name, field_type in desired_sql_schema.items():
+            if field_name not in current_sql_schema:
                 self._conn.execute(f"ALTER TABLE dataset ADD COLUMN {field_name} {field_type}")
                 continue
 
-            if current_schema[field_name] != field_type:
+            if current_sql_schema[field_name] != field_type:
                 self._conn.execute(f"ALTER TABLE dataset DROP COLUMN {field_name}")
-                self._conn.execute(f"ALTER TABLE dataset ADD COLUMN {field_name} {field_type}")
+                self._conn.execute(f"ALTER TABLE dataset  ADD COLUMN {field_name} {field_type}")
                 continue
 
     def insert(self) -> None:

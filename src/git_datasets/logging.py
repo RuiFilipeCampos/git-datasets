@@ -1,4 +1,4 @@
-""" logger.py - Extension and configuration of logger """
+""" Extension and configuration of logger """
 
 import logging
 import logging.config
@@ -69,7 +69,7 @@ logging.config.dictConfig({
 })
 
 def get_logger(name: str) -> ExtendedLogger:
-    """Returns an instance of the ExtendedLogger for the specified name."""
+    """ Returns an instance of the ExtendedLogger for the specified name. """
 
     return logging.getLogger(name)
 

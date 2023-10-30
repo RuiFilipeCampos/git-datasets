@@ -3,8 +3,9 @@ conform to in order to fit into the codebase. """
 
 from abc import ABC, abstractmethod
 from typing import Iterator, TypeAlias
-from git_datasets.types import RelativePath, Schema
 from contextlib import contextmanager
+
+from git_datasets.types import RelativePath, Schema
 
 AllowedPythonTypes: TypeAlias = type[int] | type[str] | type[float]
 

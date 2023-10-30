@@ -1,10 +1,15 @@
 """ 
-commands.py - interactions with the command line
+Interactions with the command line
 """
 
 import subprocess
 
-def get_git_root_path() -> str | None:
+from git_datasets.types import AbsolutePath, GitCommitHash
+from git_datasets.logging import get_logger
+
+logger = get_logger(__name__)
+
+def get_git_root_path() -> AbsolutePath:
     """ Retrieve the root path of the current Git repository. """
 
     try:
@@ -16,9 +21,10 @@ def get_git_root_path() -> str | None:
 
         return base_path
     except subprocess.CalledProcessError:
-        return None
+        logger.error("Couldn't find root of git repository.")
+        raise SystemExit
 
-def get_git_current_commit_hash() -> str | None:
+def get_git_current_commit_hash() -> GitCommitHash:
     """ Retrieve the current commit hash of the Git repository. """
 
     try:
@@ -30,4 +36,5 @@ def get_git_current_commit_hash() -> str | None:
 
         return commit_hash
     except subprocess.CalledProcessError:
-        return None
+        logger.error("Couldn't get the hash of the current commit.")
+        raise SystemExit

@@ -1,10 +1,9 @@
 """ Repository for all the types used in the codebase. """
 
-from functools import wraps
-from typing import Callable, get_type_hints, Any, Unpack, TypeVar
-from git_datasets.exceptions import InvalidInputType
+from typing import Callable, Any, TypeVar
 from enum import Enum
 from typing import TypeAlias
+
 
 # decorators
 
@@ -49,21 +48,5 @@ class Action(type):
 
 AnyFunction: TypeAlias = Callable[..., Any]
 
-def validate_arguments(function: AnyFunction) -> AnyFunction:
-    """ Runtime validation of function arguments. """
-
-    @wraps(function)
-    def wrapper(*args: Unpack[Any], **kwargs: Unpack[Any]) -> Any:
-        hints = get_type_hints(function)
-        for name, value in kwargs.items():
-            expected_type = hints.get(name)
-
-            if expected_type is None:
-                continue
-
-            if not isinstance(value, expected_type):
-                raise InvalidInputType(name, expected_type, value)
-
-        return function(*args, **kwargs)
-    return wrapper
-
+SHA1Hash = str
+GitCommitHash = SHA1Hash
