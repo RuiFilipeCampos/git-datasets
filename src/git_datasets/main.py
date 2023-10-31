@@ -34,6 +34,8 @@ def dataset(cls: DecoratedClass) -> DecoratedClass:
         hooks.pre_commit()
     elif cli_args.post_commit:
         hooks.post_commit()
+    elif cli_args.post_checkout:
+        hooks.post_checkout()
     elif cli_args.pull:
         hooks.pull()
     elif cli_args.push:

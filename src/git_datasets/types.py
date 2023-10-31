@@ -1,39 +1,58 @@
 """ Repository for all the types used in the codebase. """
 
-from typing import Callable, Any, TypeVar
+from typing import Callable, Any, TypeVar, Annotated
 from enum import Enum
 from typing import TypeAlias
 
 
+S = TypeVar("S")
+T = TypeVar("T")
+U = TypeVar("U", bound=Callable)
+
+AnyFunction = Callable[..., Any]
+SingleArgFunction = Callable[[S], T]
+TypeCheckedArgs = Annotated[U, "Has been validated at runtime."]
+
 # decorators
 
-DecoratedClass: TypeAlias = type
-Decorator: TypeAlias = Callable[[DecoratedClass], DecoratedClass]
+# NOTE The class decorated with "@dataset".
+
+AnnotatedClass = type
+DecoratedClass = type
+
+Decorator = SingleArgFunction[DecoratedClass, DecoratedClass]
 
 # paths 
 
-PathStr: TypeAlias = str
-RelativePath: TypeAlias = str
-AbsolutePath: TypeAlias = str
-SQLCmdStr: TypeAlias = str
+PathStr = str
+RelativePath = str
+AbsolutePath = str
+SQLCmdStr = str
 
 class SQLType(Enum):
+    """ SQL Types supported by duckdb. """
+
     TEXT = "TEXT"
     INTEGER = "INTEGER"
     REAL = "REAL"
     BLOB = "BLOB"
     NULL = "NULL"
 
-PySchema: TypeAlias = type[int] | type[str]
-FieldNameStr: TypeAlias = str
+class PyType(Enum):
+    """ Python types that are allowed in the schema."""
 
-T = TypeVar("T")
+    STR = str
+    INT = int
+    FLOAT = float
 
-Schema: TypeAlias = dict[FieldNameStr, T]
-DatasetSQLSchema: TypeAlias = Schema[SQLType]
-DatasetPySchema: TypeAlias = Schema[PySchema]
 
-class Action(type):
+FieldNameStr = str
+
+Schema = dict[FieldNameStr, T]
+DatasetSQLSchema = Schema[SQLType]
+DatasetPySchema = Schema[PyType]
+
+class Action(Enum):
     """ Actions for row transformations. """
 
     class Insert(type):
@@ -45,8 +64,11 @@ class Action(type):
     class Alter(type):
         """ Change data. """
 
+    NoAction = None
 
-AnyFunction: TypeAlias = Callable[..., Any]
+
+
+
 
 SHA1Hash = str
 GitCommitHash = SHA1Hash

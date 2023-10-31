@@ -16,10 +16,10 @@ from git_datasets.virtual_memory.abstract import (
     VirtualMemory, AllowedPythonTypes, FileInterface
 )
 
-logger = get_logger(__name__)
-
-
 __all__ = ["LocalCheckpoinstVM"]
+
+
+logger = get_logger(__name__)
 
 TypeMap = dict[type, SQLType]
 FieldSpec = tuple[object, str, SQLType]
@@ -50,18 +50,19 @@ class LocalParquetFile(FileInterface):
     def set_schema(self, desired_schema: dict[str, AllowedPythonTypes]) -> None:
         """ Set the database schema. """
 
+        if not self._file_exists:
+            columns = ', '.join(
+                f"{field_n} {self.TYPE_MAP[field_t]}" 
+                for field_n, field_t
+                in desired_schema.items()
+            )
+            self._conn.execute(f"CREATE TABLE dataset ({columns})")
+            return
+
         desired_sql_schema = {
             field_n: self.TYPE_MAP[field_t]
             for field_n, field_t in desired_schema.items()
         }
-
-        if not self._file_exists:
-            sql = 'CREATE TABLE dataset ('
-            for field_n, field_t in desired_sql_schema.items():
-                sql += f'{field_n} {field_t},'
-            sql += ')'
-            self._conn.execute(sql)
-            return
 
         connection = self._conn.execute("PRAGMA table_info(dataset);")
         result: list[FieldSpec] = connection.fetchall()
