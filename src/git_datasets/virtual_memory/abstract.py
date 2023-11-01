@@ -2,23 +2,22 @@
 conform to in order to fit into the codebase. """
 
 from abc import ABC, abstractmethod
-from typing import Iterator, TypeAlias
+from typing import Iterator
 from contextlib import contextmanager
 
-from git_datasets.types import RelativePath, Schema
+from git_datasets.types import RelativePath, DatasetPySchema
 
-AllowedPythonTypes: TypeAlias = type[int] | type[str] | type[float]
 
 class FileInterface(ABC):
     """ Provides a virtual interface to edit
      a parquet file. """
 
     @abstractmethod
-    def set_schema(self, desired_schema: Schema[AllowedPythonTypes]) -> None:
+    def set_schema(self, desired_schema: DatasetPySchema) -> None:
         """ Set the schema. """
 
     @abstractmethod
-    def insert(self) -> None:
+    def insert(self, fields: list[str], data: list) -> None:
         """ Insert a new row. """
 
     @abstractmethod

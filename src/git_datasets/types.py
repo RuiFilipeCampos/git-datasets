@@ -2,8 +2,6 @@
 
 from typing import Callable, Any, TypeVar, Annotated
 from enum import Enum
-from typing import TypeAlias
-
 
 S = TypeVar("S")
 T = TypeVar("T")
@@ -65,9 +63,6 @@ class Action(Enum):
         """ Change data. """
 
     NoAction = None
-
-
-
 
 
 SHA1Hash = str

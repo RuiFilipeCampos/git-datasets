@@ -2,18 +2,18 @@
 
 import os
 from contextlib import contextmanager
-from typing import final, Iterator, Final, Protocol, Any
+from typing import final, Iterator, Final
 
 from duckdb import (
     DuckDBPyConnection, # for type hinting
     connect # for generating a `DuckDBPyConnection` instance
 )
 
-from git_datasets.types import RelativePath, AbsolutePath, DatasetSQLSchema, SQLType
+from git_datasets.types import RelativePath, AbsolutePath, DatasetSQLSchema, SQLType, DatasetPySchema
 from git_datasets.logging import get_logger
 from git_datasets.commands import get_git_root_path
 from git_datasets.virtual_memory.abstract import (
-    VirtualMemory, AllowedPythonTypes, FileInterface
+    VirtualMemory, FileInterface
 )
 
 __all__ = ["LocalCheckpoinstVM"]
@@ -47,16 +47,22 @@ class LocalParquetFile(FileInterface):
                 FROM parquet_scan('{self._path}');
             """)
 
-    def set_schema(self, desired_schema: dict[str, AllowedPythonTypes]) -> None:
+    def set_schema(self, desired_schema: DatasetPySchema) -> None:
         """ Set the database schema. """
 
         if not self._file_exists:
             columns = ', '.join(
                 f"{field_n} {self.TYPE_MAP[field_t]}" 
-                for field_n, field_t
+                for (field_n, field_t)
                 in desired_schema.items()
             )
-            self._conn.execute(f"CREATE TABLE dataset ({columns})")
+            self._conn.execute(f"""
+                               
+                CREATE TABLE dataset (
+                               id INTEGER,
+                               {columns})
+                               
+                               """)
             return
 
         desired_sql_schema = {
@@ -66,7 +72,7 @@ class LocalParquetFile(FileInterface):
 
         connection = self._conn.execute("PRAGMA table_info(dataset);")
         result: list[FieldSpec] = connection.fetchall()
-        current_sql_schema: DatasetSQLSchema = { field[1]: field[2] for field in result }
+        current_sql_schema: DatasetSQLSchema = { field[1]: field[2] for field in result if field[1] != "id"}
 
         logger.debug("Current schema: %s", current_sql_schema)
         logger.debug("Current schema: %s", desired_sql_schema)
@@ -92,8 +98,15 @@ class LocalParquetFile(FileInterface):
                 self._conn.execute(f"ALTER TABLE dataset  ADD COLUMN {field_name} {field_type}")
                 continue
 
-    def insert(self) -> None:
-        """ TODO """
+    def insert(self, fields, data: list) -> None:
+        num_fields = len(data[0])
+        placeholders = ", ".join("?" for _ in range(num_fields))
+        values_clause = ", ".join(f"({placeholders})" for _ in range(len(data)))
+        columns = ', '.join(f"{field_n}" for field_n in fields)
+        sql_query = f"INSERT INTO dataset ({columns}) VALUES {values_clause}"        
+        flat_values = [item for sublist in data for item in sublist]
+        self._conn.execute(sql_query, flat_values)
+
 
     def delete(self) -> None:
         """ TODO """
@@ -101,8 +114,20 @@ class LocalParquetFile(FileInterface):
     def alter(self) -> None:
         """ TODO """
 
-    def select(self) -> None:
+    def select(self, *columns) -> None:
         """ TODO """
+        print(columns)
+        if len(columns) == 0:
+            return [
+                (None, [])
+            ]
+
+        columns = ", ".join(columns)
+        result = self._conn.execute(f"""
+            SELECT id, {columns} FROM dataset;
+        """).fetchall()
+
+        return result
 
     def close(self) -> None:
         """ Removes the tables from memory. """
@@ -111,7 +136,6 @@ class LocalParquetFile(FileInterface):
 
     def save(self) -> None:
         """ Saves the in-memory table to the parquet file. """
-
         self._conn.execute(f"""
             COPY dataset TO '{self._path}' (FORMAT 'PARQUET')
         """)
