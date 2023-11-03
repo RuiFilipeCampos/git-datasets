@@ -3,36 +3,42 @@
 from git_datasets.logging import get_logger
 from git_datasets.types import AnyFunction
 from git_datasets.virtual_memory.abstract import FileInterface
-from graphlib import TopologicalSorter
-from typing import get_type_hints, Iterator, final
+from typing import final
 from abc import ABC, abstractmethod
 
-
-__all__ = ["apply_transforms"]
 
 logger = get_logger(__name__)
 
 
 class Action(ABC):
+    """ TODO """
+
     function: AnyFunction
     args: list[str]
 
     def __init__(self, function: AnyFunction, args: list[str]) -> None:
+        """ TODO """
+
         self.function = function
         self.args = args
 
     @final
     def _select_args(self, parquet_file: FileInterface):
+        """ TODO """
+
         return parquet_file.select(*self.args)
 
     @abstractmethod
     def __call__(self, parquet_file: FileInterface) -> None:
+        """ TODO """
         ...
 
 
 class Insert(Action):
+    """ TODO """
 
     def __call__(self, parquet_file: FileInterface) -> None:
+        """ TODO """
 
         fields = parquet_file.current_schema.keys()
 
@@ -48,7 +54,9 @@ class Insert(Action):
             parquet_file.insert(fields, to_insert)
 
 class Delete(Action):
+    """ TODO """
     def __call__(self, parquet_file: FileInterface) -> None:
+        """ TODO """
         rows = self._select_args(parquet_file)
         for id, *row in rows:
             if self.function(*row):
@@ -56,16 +64,21 @@ class Delete(Action):
 
 
 class Alter(Action):
+    """ TODO """
     ...
 
 class NewField(Insert):
+    """ TODO """
     ...
 
 class DoNothing(Action):
+    """ TODO """
     def __eq__(self, other):
+        """ TODO """
         return other == type(None)
 
     def __call__(self, parquet_file: FileInterface) -> None:
+        """ TODO """
 
         rows = self._select_args(parquet_file)
 
@@ -76,51 +89,3 @@ class DoNothing(Action):
 ACTIONS = {Insert, Delete, Alter, DoNothing}
 
 
-class TransformsGraph(TopologicalSorter):
-
-    _last_method_name: str
-    _set_of_transforms: dict[str, Action]
-
-    def __init__(self):
-        super().__init__()
-        self._last_method_name = ""
-        self._set_of_transforms = {}
-
-    def add(self, method: AnyFunction):
-
-        type_hints = get_type_hints(method)
-        return_type = type_hints.pop("return")
-        args = type_hints.keys()
-
-        dependency_transforms = [
-            dependency_name for dependency_name in args
-            if dependency_name in self._set_of_transforms
-        ]
-
-        if return_type == type(None):
-            return_type = DoNothing
-
-        self._set_of_transforms[method.__name__] = return_type(method, args)
-
-        super().add(
-            method.__name__,
-            self._last_method_name,
-            *dependency_transforms
-        )
-
-        self._last_method_name = method.__name__
-
-        return return_type
-    
-    def static_order(self):
-        sorted_nodes = super().static_order()
-        sorted_nodes = iter(sorted_nodes)
-        next(sorted_nodes, None)
-        logger.debug("Dependency graph has been constructed.")
-        return sorted_nodes
-    
-    def __iter__(self) -> Iterator[Action]:
-        sorted_nodes: Iterator[str] = self.static_order()
-
-        for transform_name in sorted_nodes:
-            yield self._set_of_transforms[transform_name]
