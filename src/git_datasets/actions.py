@@ -4,7 +4,7 @@ from git_datasets.logging import get_logger
 from git_datasets.types import AnyFunction
 from git_datasets.virtual_memory.abstract import FileInterface
 from graphlib import TopologicalSorter
-from typing import get_type_hints, Iterator
+from typing import get_type_hints, Iterator, final
 from abc import ABC, abstractmethod
 
 
@@ -14,21 +14,29 @@ logger = get_logger(__name__)
 
 
 class Action(ABC):
+    function: AnyFunction
+    args: list[str]
 
-    def __init__(self, function, args):
+    def __init__(self, function: AnyFunction, args: list[str]) -> None:
         self.function = function
         self.args = args
 
+    @final
+    def _select_args(self, parquet_file: FileInterface):
+        return parquet_file.select(*self.args)
+
     @abstractmethod
-    def __call__(self, parquet_file: FileInterface, rows: list[tuple]):
+    def __call__(self, parquet_file: FileInterface) -> None:
         ...
 
 
 class Insert(Action):
 
-    def __call__(self, parquet_file: FileInterface, rows: list[tuple]):
+    def __call__(self, parquet_file: FileInterface) -> None:
 
         fields = parquet_file.current_schema.keys()
+
+        rows = self._select_args(parquet_file)
 
         if len(rows) == 1 and rows[0][0] is None:
             to_insert = self.function()
@@ -40,7 +48,8 @@ class Insert(Action):
             parquet_file.insert(fields, to_insert)
 
 class Delete(Action):
-    def __call__(self, parquet_file: FileInterface, rows: list[tuple]):
+    def __call__(self, parquet_file: FileInterface) -> None:
+        rows = self._select_args(parquet_file)
         for id, *row in rows:
             if self.function(*row):
                 parquet_file.delete(id)
@@ -56,7 +65,10 @@ class DoNothing(Action):
     def __eq__(self, other):
         return other == type(None)
 
-    def __call__(self, parquet_file: FileInterface, rows: list[tuple]):
+    def __call__(self, parquet_file: FileInterface) -> None:
+
+        rows = self._select_args(parquet_file)
+
         for id, *row in rows:
             self.function(*row)
 

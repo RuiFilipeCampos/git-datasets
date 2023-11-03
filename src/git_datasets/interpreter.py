@@ -44,15 +44,12 @@ def apply_transforms(
             continue
 
         transform = getattr(cls, method_name)
+
         if not callable(transform):
             continue
 
-        
-
         if method_name in desired_schema:
             raise RepeatedAttributeError(attribute_name)
-
-        
 
         type_of_transform = transforms_graph.add(transform)
 
@@ -60,13 +57,7 @@ def apply_transforms(
             desired_schema[method_name] = type_of_transform
 
     with virtual_memory.open(parquet_file_path) as parquet_file:
-
         parquet_file.set_schema(desired_schema)
-
         for transform in transforms_graph:
-            rows = parquet_file.select(*transform.args)
-            transform(parquet_file, rows)
+            transform(parquet_file)
 
-
-
-  
