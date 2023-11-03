@@ -4,7 +4,7 @@ TODO: getting "Method 'delete_corrupted_files' should have "self" as first argum
 """
 
 from git_datasets import dataset
-from git_datasets.actions import Insert
+from git_datasets.actions import Insert, Delete
 
 @dataset
 class TestDataset:
@@ -26,9 +26,12 @@ class TestDataset:
             ("Moby Dick", "Herman Melville", 635, "long"),
 
         ]
+    
+    def print_all(title: str) -> None:
+        print(title)
 
-    def print_staff(title: str, pages: int) -> None:
-        print(f"This book is titled {title} and has {pages} pages-")
+    def delete_data(pages: int) -> Delete:
+        return pages > 200
 
     def check_book_length(pages: int, label: str) -> None:
 
@@ -41,4 +44,6 @@ class TestDataset:
         else:
             assert label == "long"
 
+    def delete_all(pages: int) -> Delete:
+        return True
 

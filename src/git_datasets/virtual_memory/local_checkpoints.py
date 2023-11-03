@@ -16,6 +16,8 @@ from git_datasets.virtual_memory.abstract import (
     VirtualMemory, FileInterface
 )
 
+import uuid
+
 __all__ = ["LocalCheckpoinstVM"]
 
 
@@ -50,19 +52,18 @@ class LocalParquetFile(FileInterface):
     def set_schema(self, desired_schema: DatasetPySchema) -> None:
         """ Set the database schema. """
 
+        self.current_schema = desired_schema
+
         if not self._file_exists:
             columns = ', '.join(
                 f"{field_n} {self.TYPE_MAP[field_t]}" 
                 for (field_n, field_t)
                 in desired_schema.items()
             )
-            self._conn.execute(f"""
-                               
-                CREATE TABLE dataset (
-                               id INTEGER,
-                               {columns})
-                               
-                               """)
+            self._conn.execute(f"""                   
+                CREATE TABLE dataset (id VARCHAR PRIMARY KEY, {columns})
+            """)
+            logger.debug("Schema has been set.")
             return
 
         desired_sql_schema = {
@@ -97,37 +98,36 @@ class LocalParquetFile(FileInterface):
                 self._conn.execute(f"ALTER TABLE dataset DROP COLUMN {field_name}")
                 self._conn.execute(f"ALTER TABLE dataset  ADD COLUMN {field_name} {field_type}")
                 continue
+        logger.debug("Schema has been set.")
 
     def insert(self, fields, data: list) -> None:
-        num_fields = len(data[0])
-        placeholders = ", ".join("?" for _ in range(num_fields))
-        values_clause = ", ".join(f"({placeholders})" for _ in range(len(data)))
         columns = ', '.join(f"{field_n}" for field_n in fields)
-        sql_query = f"INSERT INTO dataset ({columns}) VALUES {values_clause}"        
-        flat_values = [item for sublist in data for item in sublist]
-        self._conn.execute(sql_query, flat_values)
+        sql = ""
+        for row in data:
+            sql += f"('{uuid.uuid4().hex}', "
+            sql += ", ".join(f"'{field_v}'" for field_v in row)
+            sql += "),"
+
+        sql_query = f"INSERT INTO dataset (id, {columns}) VALUES {sql}"  
+        self._conn.execute(sql_query)
 
 
-    def delete(self) -> None:
+    def delete(self, id: str) -> None:
         """ TODO """
+        self._conn.execute(f"DELETE FROM dataset WHERE id='{id}';")
 
     def alter(self) -> None:
         """ TODO """
 
     def select(self, *columns) -> None:
         """ TODO """
-        print(columns)
+    
         if len(columns) == 0:
-            return [
-                (None, [])
-            ]
+            return [(None, [])]
 
         columns = ", ".join(columns)
-        result = self._conn.execute(f"""
-            SELECT id, {columns} FROM dataset;
-        """).fetchall()
-
-        return result
+        result = self._conn.execute(f"SELECT id, {columns} FROM dataset;")
+        return result.fetchall()
 
     def close(self) -> None:
         """ Removes the tables from memory. """

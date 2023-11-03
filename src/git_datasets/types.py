@@ -2,6 +2,7 @@
 
 from typing import Callable, Any, TypeVar, Annotated
 from enum import Enum
+from collections import OrderedDict
 
 S = TypeVar("S")
 T = TypeVar("T")
@@ -46,24 +47,8 @@ class PyType(Enum):
 
 FieldNameStr = str
 
-Schema = dict[FieldNameStr, T]
+Schema = OrderedDict[FieldNameStr, T]
 DatasetSQLSchema = Schema[SQLType]
 DatasetPySchema = Schema[PyType]
-
-class Action(Enum):
-    """ Actions for row transformations. """
-
-    class Insert(type):
-        """ Add data to the dataset. """
-
-    class Delete(type):
-        """ Delete data from the dataset. """
-
-    class Alter(type):
-        """ Change data. """
-
-    NoAction = None
-
-
 SHA1Hash = str
 GitCommitHash = SHA1Hash
